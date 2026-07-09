@@ -162,6 +162,30 @@ canvas{max-width:100%;border-radius:8px}
   </div>
 
   <div class="card">
+    <div class="sec">7a · ⚡ Hook Bomb <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(viral text-on-screen reel)</span></div>
+    <div class="dim" style="margin-bottom:8px">The #1 faceless format. One line per beat — line 1 is the HOOK (it's also the first frame, for sound-off scrollers). Use *gold* _red_ +green+ marks. Keep beats under 8 words. Under 15s total.</div>
+    <textarea id="hbScript" rows="6" placeholder="_९९% मान्छे_ यो गल्ती गर्छन्&#10;पैसा कमाउने होइन&#10;*बचाउने* game हो&#10;..."></textarea>
+    <div class="grid2" style="margin-top:8px">
+      <button class="btn2" onclick="VIRAL.hbPrompt()">📋 Copy AI Prompt</button>
+      <button class="btn2" onclick="VIRAL.hbPreview()">▶ Preview</button>
+    </div>
+    <button class="btn" style="margin-top:8px" onclick="VIRAL.hbExport()">🎬 Export Hook Bomb MP4</button>
+    <div class="dim" id="hbStatus" style="margin-top:6px"></div>
+  </div>
+
+  <div class="card">
+    <div class="sec">7b · ⏱ Challenge Reel <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(guess before the timer)</span></div>
+    <div class="dim" style="margin-bottom:8px">Retention machine: question → 3-2-1 countdown → answer snap. Viewers must stay to check answers, then comment their score. First line = title, then one <strong style="color:var(--gd)">Question | Answer</strong> per line (3-5 questions).</div>
+    <textarea id="chScript" rows="6" placeholder="Nepal Quiz — कति आउँछ?&#10;नेपालको सबैभन्दा लामो नदी? | कर्णाली&#10;सगरमाथा कति मिटर? | ८८४८&#10;..."></textarea>
+    <div class="grid2" style="margin-top:8px">
+      <button class="btn2" onclick="VIRAL.chPrompt()">📋 Copy AI Prompt</button>
+      <button class="btn2" onclick="VIRAL.chPreview()">▶ Preview</button>
+    </div>
+    <button class="btn" style="margin-top:8px" onclick="VIRAL.chExport()">🎬 Export Challenge MP4</button>
+    <div class="dim" id="chStatus" style="margin-top:6px"></div>
+  </div>
+
+  <div class="card">
     <div class="sec">6 · SEO Caption</div>
     <div class="dim" style="margin-bottom:8px">TikTok is a search engine now — captions do SEO work. Keywords first.</div>
     <label>Main keyword / topic</label>
@@ -2950,6 +2974,285 @@ var REEL=(function(){
   return {setPace:setPace,preview:preview,exportMp4:exportMp4,save:save,drawReelFrame:drawReelFrame};
 })();
 window.REEL=REEL;
+
+
+/* ═══════════ VIRAL REELS — Hook Bomb + Challenge ═══════════ */
+var VIRAL=(function(){
+  var VFPS=30;
+  var playing=false, raf=null, busy=false;
+
+  function hlC(){return ACCENTS[ACC]||'#e8c96a';}
+  function plain(s){return (s||'').replace(/[*_+\[\]~]/g,'');}
+
+  // compact rich text drawer (left-anchored, semantic colors, auto-shrink+grow)
+  function richBlock(text,cx,cy,baseSz,maxW,baseC,weight,font){
+    var toks=tokHL(text);
+    var sz=baseSz,lines,guard=0;
+    do{
+      g.font=weight+' '+sz+'px '+font;
+      lines=wrapHL(g,toks,maxW,6);
+      if(lines.length*sz*1.22<=cv.height*.5||sz<=Math.round(cv.width*.045))break;
+      sz=Math.round(sz*.92);guard++;
+    }while(guard<8);
+    var COL={gold:hlC(),red:'#ff5d75',green:'#3ecf8e'};
+    var totalH=lines.length*sz*1.22;
+    var y0=cy-totalH/2+sz*.8;
+    g.textAlign='left';
+    g.shadowColor='rgba(0,0,0,.9)';g.shadowBlur=cv.width*.016;g.shadowOffsetY=cv.width*.002;
+    lines.forEach(function(line,li){
+      var lw=0;line.forEach(function(tk){lw+=g.measureText(tk.w+' ').width;});
+      var xx=cx-lw/2; // center the block itself around cx
+      line.forEach(function(tk){
+        if(tk.st==='box'){
+          g.shadowBlur=0;
+          var wpx=g.measureText(tk.w).width,padX=sz*.16,padY=sz*.1;
+          g.fillStyle=hlC();
+          g.beginPath();g.roundRect?g.roundRect(xx-padX,y0+li*sz*1.22-sz*.78-padY,wpx+padX*2,sz*1.0+padY*2,sz*.15):g.rect(xx-padX,y0+li*sz*1.22-sz*.78-padY,wpx+padX*2,sz*1.0+padY*2);g.fill();
+          g.fillStyle='#0c0d15';
+          g.shadowBlur=0;
+        } else if(tk.st==='strike'){
+          g.fillStyle='rgba(255,110,130,.8)';
+        } else {
+          g.fillStyle=tk.st?(COL[tk.st]||hlC()):baseC;
+        }
+        g.fillText(tk.w,xx,y0+li*sz*1.22);
+        if(tk.st==='strike'){
+          var wpx2=g.measureText(tk.w).width;
+          g.strokeStyle='#ff5d75';g.lineWidth=Math.max(3,sz*.075);
+          g.beginPath();g.moveTo(xx-sz*.04,y0+li*sz*1.22-sz*.3);g.lineTo(xx+wpx2+sz*.04,y0+li*sz*1.22-sz*.3);g.stroke();
+        }
+        xx+=g.measureText(tk.w+' ').width;
+        g.shadowColor='rgba(0,0,0,.9)';g.shadowBlur=cv.width*.016;
+      });
+    });
+    g.shadowBlur=0;g.shadowOffsetY=0;
+  }
+
+  function bgFrame(glowColor){
+    var W=cv.width,H=cv.height;
+    var gr=g.createLinearGradient(0,0,0,H);
+    gr.addColorStop(0,'#0b0b16');gr.addColorStop(1,'#050509');
+    g.fillStyle=gr;g.fillRect(0,0,W,H);
+    var rg=g.createRadialGradient(W*.5,H*.45,0,W*.5,H*.45,W*.85);
+    rg.addColorStop(0,glowColor);rg.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=rg;g.fillRect(0,0,W,H);
+    var pp=Math.round(W*.014);
+    g.fillStyle='#c9334a';g.fillRect(0,0,pp,H*.5);
+    g.fillStyle='#4a7fc0';g.fillRect(0,H*.5,pp,H*.5);
+    var bsz=Math.round(W*.022);
+    g.font='700 '+bsz+'px "Cinzel","Mukta",serif';
+    g.fillStyle='rgba(232,201,106,.5)';g.textAlign='center';
+    g.fillText('THE WALKING PARADOX',W/2,H*.045);
+  }
+  function progressBar(f,tot){
+    var W=cv.width,H=cv.height;
+    g.fillStyle='rgba(255,255,255,.12)';g.fillRect(0,0,W,Math.max(4,H*.004));
+    g.fillStyle=hlC();g.fillRect(0,0,W*(f/tot),Math.max(4,H*.004));
+  }
+  function handle(){
+    var W=cv.width,H=cv.height;
+    g.font='600 '+Math.round(W*.022)+'px "DM Sans","Mukta",sans-serif';
+    g.fillStyle='rgba(160,155,142,.55)';g.textAlign='center';
+    g.fillText('@walkingparadox',W/2,H*.97);
+  }
+
+  /* ── HOOK BOMB ── */
+  function hbBeats(){
+    return (document.getElementById('hbScript').value||'').split('\n')
+      .map(function(l){return l.trim();}).filter(Boolean).slice(0,14);
+  }
+  function hbSegs(){
+    var beats=hbBeats();
+    return beats.map(function(b,i){
+      if(i===0)return Math.round(1.6*VFPS);            // hook holds
+      return Math.round(Math.min(2.2,Math.max(0.85,0.55+plain(b).length*0.035))*VFPS);
+    });
+  }
+  function hbTotal(){return hbSegs().reduce(function(a,b){return a+b;},0);}
+  function hbFrame(f){
+    var beats=hbBeats(),segs=hbSegs();
+    var acc=0,idx=0,local=0;
+    for(var i=0;i<segs.length;i++){if(f<acc+segs[i]){idx=i;local=f-acc;break;}acc+=segs[i];}
+    var W=cv.width,H=cv.height;
+    bgFrame(idx===0?'rgba(232,201,106,.14)':'rgba(74,127,192,.1)');
+    // pop-in scale (first 4 frames of each beat)
+    var pop=Math.min(local/4,1);
+    var scale=1.08-0.08*pop;
+    g.save();
+    g.translate(W/2,H*.48);g.scale(scale,scale);g.translate(-W/2,-H*.48);
+    var sz=idx===0?Math.round(W*.095):Math.round(W*.082);
+    richBlock(beats[idx]||'',W*.5,H*.48,sz,W*.70,'#f7f2ea','900','"'+HFONT+'","Mukta",sans-serif');
+    g.restore();
+    // beat counter dots
+    var dr=Math.max(4,W*.007),gap=dr*2.6;
+    var totW=beats.length*gap-((gap-dr*2));
+    beats.forEach(function(_,di){
+      g.beginPath();g.arc(W/2-totW/2+di*gap+dr,H*.88,dr,0,Math.PI*2);
+      g.fillStyle=di<=idx?hlC():'rgba(255,255,255,.15)';g.fill();
+    });
+    progressBar(f,hbTotal());handle();
+  }
+
+  /* ── CHALLENGE ── */
+  function chData(){
+    var lines=(document.getElementById('chScript').value||'').split('\n')
+      .map(function(l){return l.trim();}).filter(Boolean);
+    var title=lines.length&&lines[0].indexOf('|')<0?lines.shift():'';
+    var qs=lines.map(function(l){
+      var p=l.split('|');return {q:(p[0]||'').trim(),a:(p[1]||'').trim()};
+    }).filter(function(x){return x.q;}).slice(0,6);
+    return {title:title,qs:qs};
+  }
+  var CH_INTRO=Math.round(1.4*VFPS), CH_Q=Math.round(1.0*VFPS), CH_TIMER=3*VFPS, CH_A=Math.round(1.1*VFPS), CH_END=Math.round(2.0*VFPS);
+  function chPerQ(){return CH_Q+CH_TIMER+CH_A;}
+  function chTotal(){return CH_INTRO+chData().qs.length*chPerQ()+CH_END;}
+  function chFrame(f){
+    var d=chData(),W=cv.width,H=cv.height;
+    var tot=chTotal();
+    if(f<CH_INTRO){
+      bgFrame('rgba(232,201,106,.15)');
+      richBlock(d.title||'Quiz Time',W*.5,H*.42,Math.round(W*.085),W*.70,'#f7f2ea','900','"'+HFONT+'","Mukta",sans-serif');
+      var s2=Math.round(W*.04);
+      g.font='700 '+s2+'px "DM Sans","Mukta",sans-serif';
+      g.fillStyle=hlC();g.textAlign='center';
+      g.fillText(LANG==='en'?'How many can YOU get? 👇':'तपाईं कति वटा आउँछ? 👇',W/2,H*.6);
+      progressBar(f,tot);handle();return;
+    }
+    var fa=f-CH_INTRO;
+    var qi=Math.floor(fa/chPerQ());
+    if(qi<d.qs.length){
+      var lf=fa-qi*chPerQ();
+      var item=d.qs[qi];
+      bgFrame('rgba(74,127,192,.12)');
+      // Q number tag
+      g.font='800 '+Math.round(W*.032)+'px "DM Sans","Mukta",sans-serif';
+      g.fillStyle=hlC();g.textAlign='center';
+      if('letterSpacing' in g)g.letterSpacing='2px';
+      g.fillText('Q'+(qi+1)+' / '+d.qs.length,W/2,H*.16);
+      if('letterSpacing' in g)g.letterSpacing='0px';
+      // question
+      richBlock(item.q,W*.5,H*.34,Math.round(W*.06),W*.70,'#f7f2ea','800','"'+HFONT+'","Mukta",sans-serif');
+      if(lf<CH_Q+CH_TIMER){
+        // TIMER ring
+        var tl=Math.max(0,lf-CH_Q);
+        var remain=1-tl/CH_TIMER;
+        var secs=Math.ceil((CH_TIMER-tl)/VFPS);
+        var cxx=W*.5,cyy=H*.62,r=W*.13;
+        g.beginPath();g.arc(cxx,cyy,r,0,Math.PI*2);
+        g.strokeStyle='rgba(255,255,255,.12)';g.lineWidth=W*.016;g.stroke();
+        g.beginPath();g.arc(cxx,cyy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*remain);
+        g.strokeStyle=secs<=1?'#ff5d75':hlC();g.lineWidth=W*.016;g.stroke();
+        g.font='900 '+Math.round(W*.11)+'px "DM Sans","Mukta",sans-serif';
+        g.fillStyle=secs<=1?'#ff5d75':'#f7f2ea';g.textAlign='center';
+        g.fillText(lf<CH_Q?'?':String(secs),cxx,cyy+W*.04);
+        var hint=Math.round(W*.028);
+        g.font='600 italic '+hint+'px "DM Sans","Mukta",sans-serif';
+        g.fillStyle='rgba(200,195,185,.7)';
+        g.fillText(LANG==='en'?'think fast…':'छिटो सोच्नुस्…',cxx,cyy+r+W*.06);
+      } else {
+        // ANSWER snap
+        var af=lf-CH_Q-CH_TIMER;
+        var popA=Math.min(af/3,1);
+        g.save();
+        g.translate(W/2,H*.62);g.scale(1.15-0.15*popA,1.15-0.15*popA);g.translate(-W/2,-H*.62);
+        richBlock('*'+item.a+'*',W*.5,H*.62,Math.round(W*.085),W*.70,'#f7f2ea','900','"'+HFONT+'","Mukta",sans-serif');
+        g.restore();
+      }
+      progressBar(f,tot);handle();return;
+    }
+    // END card
+    bgFrame('rgba(232,201,106,.16)');
+    richBlock(LANG==='en'?'Comment your *score* 👇':'तपाईंको score *comment* गर्नुस् 👇',W*.5,H*.4,Math.round(W*.07),W*.70,'#f7f2ea','900','"'+HFONT+'","Mukta",sans-serif');
+    var s3=Math.round(W*.038);
+    g.font='700 '+s3+'px "DM Sans","Mukta",sans-serif';
+    g.fillStyle=hlC();g.textAlign='center';
+    g.fillText(LANG==='en'?'Send this to a friend 📤':'साथीलाई challenge पठाउनुस् 📤',W/2,H*.56);
+    progressBar(f,tot);handle();
+  }
+
+  /* ── shared preview + export ── */
+  function makePreview(frameFn,totalFn,statusId){
+    return function(){
+      if(busy)return;
+      if(playing){playing=false;cancelAnimationFrame(raf);render();document.getElementById(statusId).textContent='Stopped.';return;}
+      var tot=totalFn();
+      if(tot<VFPS){toast('Add content first');return;}
+      FMT='tt';fitCv();
+      playing=true;var f=0,last=0;
+      document.getElementById(statusId).textContent='▶ '+Math.round(tot/VFPS)+'s — tap Preview again to stop';
+      function loop(ts){
+        if(!playing)return;
+        if(ts-last>=1000/VFPS){last=ts;frameFn(f);f++;
+          if(f>=tot){playing=false;render();document.getElementById(statusId).textContent='✅ Done ('+Math.round(tot/VFPS)+'s)';return;}}
+        raf=requestAnimationFrame(loop);
+      }
+      raf=requestAnimationFrame(loop);
+    };
+  }
+  async function encode(frameFn,totalFn,statusId,fname){
+    if(busy)return;
+    var tot=totalFn();
+    if(tot<VFPS){toast('Add content first');return;}
+    if(typeof VideoEncoder==='undefined'||typeof Mp4Muxer==='undefined'){
+      document.getElementById(statusId).innerHTML='❌ Video export not supported in this browser.';return;
+    }
+    playing=false;cancelAnimationFrame(raf);busy=true;
+    var st=document.getElementById(statusId);
+    try{
+      FMT='tt';fitCv();
+      var W=cv.width,H=cv.height;
+      st.textContent='🎬 Encoding '+Math.round(tot/VFPS)+'s…';
+      var muxer=new Mp4Muxer.Muxer({target:new Mp4Muxer.ArrayBufferTarget(),video:{codec:'avc',width:W,height:H},fastStart:'in-memory'});
+      var err=null;
+      var enc=new VideoEncoder({output:function(c,m){muxer.addVideoChunk(c,m);},error:function(e){err=e;}});
+      enc.configure({codec:'avc1.640028',width:W,height:H,bitrate:7000000,framerate:VFPS});
+      for(var i=0;i<tot;i++){
+        frameFn(i);
+        var vf=new VideoFrame(cv,{timestamp:i*(1000000/VFPS),duration:Math.round(1000000/VFPS)});
+        enc.encode(vf,{keyFrame:i%VFPS===0});vf.close();
+        if(err)throw err;
+        if(enc.encodeQueueSize>6)await new Promise(function(r){setTimeout(r,4);});
+        if(i%VFPS===0)st.textContent='🎬 '+Math.round(i/tot*100)+'%';
+      }
+      await enc.flush();muxer.finalize();
+      var blob=new Blob([muxer.target.buffer],{type:'video/mp4'});
+      window._viralBlob=blob;window._viralName=fname;
+      render();
+      st.innerHTML='✅ Ready ('+(blob.size/1048576).toFixed(1)+' MB)!<br><button onclick="VIRAL.save()" style="margin-top:8px;padding:13px 26px;border-radius:10px;font-size:14px;font-weight:800;border:none;background:#3ecf8e;color:#0c0d15;font-family:inherit;min-height:46px">📤 Save to Photos</button>';
+    }catch(e){st.textContent='❌ '+(e&&e.message||e);}
+    busy=false;
+  }
+  function save(){
+    var b=window._viralBlob;if(!b){toast('Export first');return;}
+    var file=new File([b],window._viralName||'walkingparadox-reel.mp4',{type:'video/mp4'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})&&navigator.share){
+      navigator.share({files:[file]}).catch(function(e){
+        if(e&&e.name!=='AbortError'){var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download=file.name;a.click();setTimeout(function(){URL.revokeObjectURL(u);},5000);}
+      });
+    } else {var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download=file.name;a.click();setTimeout(function(){URL.revokeObjectURL(u);},5000);}
+  }
+
+  /* ── AI prompts (output = exact textarea format, no parser needed) ── */
+  function hbPrompt(){
+    var langNote=LANG==='en'?'ENGLISH only.':'Nepali (natural mixed Nepali/English), ONE style throughout.';
+    copyText('You write viral text-on-screen reels for "The Walking Paradox".\n\nTopic: [YOUR TOPIC HERE]\n\nWrite 8-12 BEATS, one per line, NOTHING else (no labels, no numbering):\n- Line 1 = the HOOK: under 8 words, curiosity gap or shocking claim. It is also the first frame.\n- Each beat under 8 words, punchy, builds tension line by line.\n- Mark key words: *gold insight*, _red shock/stat_, +green truth+. At least one mark per beat.\n- '+langNote+'\n- Last beat = the payoff punch that makes them rewatch.\n\nOutput ONLY the lines — I will paste them directly.','📋 Hook Bomb prompt copied');
+  }
+  function chPrompt(){
+    var langNote=LANG==='en'?'ENGLISH only.':'Nepali questions, short answers.';
+    copyText('You write quiz challenge reels for "The Walking Paradox".\n\nTopic: [YOUR TOPIC HERE]\n\nOutput format — EXACTLY this, nothing else:\nLine 1: a catchy quiz title (under 7 words)\nThen 4-5 lines, each: Question | Answer\n\nRules: questions under 10 words, answers under 4 words, verified facts, surprising answers preferred, difficulty rising each question. '+langNote+'\n\nOutput ONLY the lines — I will paste them directly.','📋 Challenge prompt copied');
+  }
+
+  return {
+    hbPreview:makePreview(hbFrame,hbTotal,'hbStatus'),
+    hbExport:function(){encode(hbFrame,hbTotal,'hbStatus','walkingparadox-hookbomb.mp4');},
+    hbPrompt:hbPrompt,
+    chPreview:makePreview(chFrame,chTotal,'chStatus'),
+    chExport:function(){encode(chFrame,chTotal,'chStatus','walkingparadox-challenge.mp4');},
+    chPrompt:chPrompt,
+    save:save,
+  };
+})();
+window.VIRAL=VIRAL;
 
 /* boot */
 document.getElementById('lNp').classList.toggle('on',LANG==='np');
