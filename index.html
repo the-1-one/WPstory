@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>WP Story Engine — Carousel Content Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;900&family=Cinzel:wght@600&family=Mukta:wght@400;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0c0d15;--card:#14152280;--lift:#1a1b2a;--b1:rgba(255,255,255,.08);--b2:rgba(255,255,255,.16);
+  --gd:#e8c96a;--red:#c9334a;--blue:#4a7fc0;--green:#3ecf8e;
+  --t1:#f5f0e8;--t2:#a09b8e;--t3:#55534e;--inv:#0c0d15;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--t1);font-family:'DM Sans','Mukta',sans-serif;padding-bottom:40px}
+.pip{position:fixed;left:0;top:0;bottom:0;width:5px;z-index:10;background:linear-gradient(to bottom,var(--red) 50%,var(--blue) 50%)}
+header{padding:16px 16px 8px 22px;text-align:center}
+header h1{font-family:'Cinzel',serif;font-size:15px;letter-spacing:3px;color:var(--gd)}
+header .sub{font-size:10px;color:var(--t3);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+.wrap{padding:12px 12px 12px 18px;max-width:640px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--b1);border-radius:14px;padding:14px;margin-bottom:12px}
+.sec{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gd);font-weight:700;margin-bottom:8px}
+.dim{color:var(--t2);font-size:12px;line-height:1.5}
+button{font-family:inherit;cursor:pointer;border:none;min-height:44px}
+.btn{background:var(--gd);color:var(--inv);border-radius:10px;padding:12px 16px;font-weight:800;font-size:13px;width:100%}
+.btn-green{background:var(--green);color:var(--inv);border-radius:10px;padding:12px 16px;font-weight:800;font-size:13px;width:100%}
+.btn2{background:var(--lift);color:var(--gd);border:1.5px solid rgba(232,201,106,.35);border-radius:10px;padding:10px 12px;font-weight:700;font-size:12px}
+.btn3{background:var(--lift);color:var(--t2);border:1px solid var(--b2);border-radius:9px;padding:9px 11px;font-weight:600;font-size:12px}
+input,select,textarea{width:100%;background:rgba(0,0,0,.3);border:1.5px solid var(--b2);border-radius:9px;color:var(--t1);font-family:inherit;font-size:14px;padding:10px;min-height:42px}
+textarea{resize:vertical}
+label{font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:1px;display:block;margin:8px 0 4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.chip{background:var(--lift);color:var(--t2);border:1px solid var(--b2);border-radius:9px;padding:10px 8px;font-weight:700;font-size:11px;text-align:center}
+.chip.on{background:rgba(232,201,106,.15);color:var(--gd);border-color:var(--gd)}
+.canvas-box{display:flex;justify-content:center;background:#050508;border:1px solid var(--b1);border-radius:12px;padding:10px}
+canvas{max-width:100%;border-radius:8px}
+.slide-nav{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:8px}
+.slide-nav .lbl{font-size:12px;color:var(--t2);font-weight:700;min-width:90px;text-align:center}
+.slide-row{background:var(--lift);border:1px solid var(--b1);border-radius:10px;padding:10px;margin-bottom:8px}
+.slide-row .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.slide-row .tp{font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:800;padding:3px 8px;border-radius:6px}
+.tp.cover{background:rgba(232,201,106,.15);color:var(--gd)}
+.tp.item{background:rgba(74,127,192,.15);color:#8ab4e8}
+.tp.myth{background:rgba(201,51,74,.18);color:#ff7d8e}
+.tp.truth{background:rgba(62,207,142,.15);color:var(--green)}
+.tp.step{background:rgba(74,127,192,.15);color:#8ab4e8}
+.tp.payoff{background:rgba(232,201,106,.2);color:var(--gd)}
+.mini{background:none;color:var(--t3);font-size:14px;min-height:30px;padding:2px 8px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e2030;color:var(--t1);padding:11px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;border:1px solid var(--b2);opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+#overlay{display:none;position:fixed;inset:0;background:rgba(5,5,10,.92);z-index:500;padding:20px;overflow:auto}
+#overlay .inner{max-width:560px;margin:30px auto;background:var(--bg);border:1px solid var(--b2);border-radius:14px;padding:16px}
+.lang-fixed{position:fixed;top:70px;right:8px;z-index:200;display:flex;flex-direction:column;gap:3px;background:rgba(12,13,21,.92);border:1px solid rgba(232,201,106,.25);border-radius:10px;padding:3px}
+.lang-fixed button{padding:7px 9px;border-radius:7px;background:transparent;color:var(--t2);font-size:11px;font-weight:700;min-height:34px}
+.lang-fixed button.on{background:var(--gd);color:var(--inv)}
+</style>
+</head>
+<body>
+<div class="pip"></div>
+<header>
+  <h1>WALKING PARADOX</h1>
+  <div class="sub">Story Engine — Carousels that convert</div>
+</header>
+
+<div class="lang-fixed">
+  <button id="lNp" class="on" onclick="setLang('np')">🇳🇵 नेपा</button>
+  <button id="lEn" onclick="setLang('en')">🌏 Eng</button>
+</div>
+
+<div class="wrap">
+
+  <div class="card">
+    <div class="sec">1 · Framework</div>
+    <div class="dim" style="margin-bottom:8px">Each framework is engineered for swipe-through: hook cover → cliffhanger slides → payoff ending.</div>
+    <div class="grid3">
+      <button class="chip on" id="fwListicle" onclick="setFw('listicle')">📋 Listicle</button>
+      <button class="chip" id="fwMythbust" onclick="setFw('mythbust')">⚖️ Myth-Bust</button>
+      <button class="chip" id="fwStory" onclick="setFw('story')">📖 Story Arc</button>
+      <button class="chip" id="fwChecklist" onclick="setFw('checklist')">✅ Checklist</button>
+      <button class="chip" id="fwBeforeafter" onclick="setFw('beforeafter')">🔄 Before/After</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec">1b · Style</div>
+    <label>Highlight color — wrap key words in *stars* to color them</label>
+    <div class="grid2" style="grid-template-columns:repeat(4,1fr)">
+      <button class="chip on" id="accGold" onclick="setAcc('gold')">Gold</button>
+      <button class="chip" id="accCrimson" onclick="setAcc('crimson')">Crimson</button>
+      <button class="chip" id="accGreen" onclick="setAcc('green')">Green</button>
+      <button class="chip" id="accBlue" onclick="setAcc('blue')">Blue</button>
+    </div>
+    <label>Heading font</label>
+    <div class="grid2">
+      <button class="chip on" id="hfSans" onclick="setHf('DM Sans')">Bold Sans</button>
+      <button class="chip" id="hfSerif" onclick="setHf('Playfair Display')">Serif</button>
+    </div>
+    <div class="dim" style="margin-top:8px;line-height:1.7">
+      <strong style="color:var(--t1)">Color language</strong> (the AI marks these automatically):<br>
+      <span style="color:var(--gd)">*key insight*</span> → gold &nbsp;·&nbsp;
+      <span style="color:#ff5d75">_shock / warning_</span> → red<br>
+      <span style="color:var(--green)">+positive / truth+</span> → green &nbsp;·&nbsp;
+      <span style="background:var(--gd);color:var(--inv);padding:0 4px;border-radius:3px;font-weight:700">[the big number]</span> → box<br>
+      <span style="color:#ff5d75;text-decoration:line-through">~the lie~</span> → strikethrough (myth-bust)
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec">2 · Content</div>
+    <label>Series tag (top of cover — the follow trigger)</label>
+    <input id="seriesTag" placeholder="e.g. NEPAL FACTS · PART 4" oninput="saveDraft();render()"/>
+    <div class="grid2" style="margin-top:8px">
+      <button class="btn2" onclick="copyAiPrompt()">📋 Copy AI Prompt</button>
+      <button class="btn2" onclick="openPaste()">📥 Paste Result</button>
+    </div>
+    <div class="dim" style="margin-top:8px">Or edit slides manually below.</div>
+  </div>
+
+  <div class="card">
+    <div class="sec">3 · Slides (<span id="slideCount">0</span>)</div>
+    <div id="slideList"></div>
+    <button class="btn3" style="width:100%" onclick="addSlide()">＋ Add slide</button>
+  </div>
+
+  <div class="card">
+    <div class="sec">4 · Preview</div>
+    <div class="grid2" style="margin-bottom:8px">
+      <button class="chip on" id="fmtTt" onclick="setFmt('tt')">TikTok 9:16</button>
+      <button class="chip" id="fmtIg" onclick="setFmt('ig')">Instagram 4:5</button>
+    </div>
+    <div class="canvas-box"><canvas id="cv"></canvas></div>
+    <div class="slide-nav">
+      <button class="btn3" onclick="nav(-1)">◀ Prev</button>
+      <div class="lbl" id="navLbl">—</div>
+      <button class="btn3" onclick="nav(1)">Next ▶</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec">5 · Export</div>
+    <button class="btn-green" onclick="exportAll()">📤 Export ALL slides → Photos</button>
+    <div style="height:8px"></div>
+    <button class="btn2" style="width:100%" onclick="exportOne()">🖼 Save current slide only</button>
+    <div class="dim" style="margin-top:8px">On iPhone: the share sheet opens with every slide — tap "Save Images" and they all land in Photos in order, ready to upload as a TikTok photo post / IG carousel.</div>
+  </div>
+
+  <div class="card">
+    <div class="sec">6 · SEO Caption</div>
+    <div class="dim" style="margin-bottom:8px">TikTok is a search engine now — captions do SEO work. Keywords first.</div>
+    <label>Main keyword / topic</label>
+    <input id="capTopic" placeholder="e.g. Nepal geography facts" oninput="buildCaption()"/>
+    <label>2-3 extra keywords (comma separated)</label>
+    <input id="capKeys" placeholder="e.g. himalaya, nepal quiz, travel nepal" oninput="buildCaption()"/>
+    <label>Generated caption</label>
+    <textarea id="capOut" rows="5" readonly></textarea>
+    <button class="btn2" style="width:100%;margin-top:8px" onclick="copyCaption()">📋 Copy caption</button>
+  </div>
+
+</div>
+
+<div id="overlay">
+  <div class="inner">
+    <div class="sec">Paste the AI's answer</div>
+    <textarea id="pasteBox" rows="10" placeholder="Paste the full response here..."></textarea>
+    <div class="grid2" style="margin-top:10px">
+      <button class="btn" onclick="runParse()">✨ Parse & Fill</button>
+      <button class="btn3" onclick="closePaste()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){'use strict';
+try{
+
+/* ═══════════ STATE ═══════════ */
+var MEM={};
+function sget(k,d){try{var v=localStorage.getItem(k);return v!==null?JSON.parse(v):d;}catch(e){return MEM[k]!==undefined?MEM[k]:d;}}
+function sset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){MEM[k]=v;}}
+
+var LANG=sget('wpse_lang','np');
+var ACC=sget('wpse_acc','gold');
+var HFONT=sget('wpse_hfont','DM Sans');
+var ACCENTS={gold:'#e8c96a',crimson:'#ff5d75',green:'#3ecf8e',blue:'#6aa8e8'};
+
+window.setAcc=function(a){
+  ACC=a;sset('wpse_acc',a);
+  ['Gold','Crimson','Green','Blue'].forEach(function(k){
+    var el=document.getElementById('acc'+k);
+    if(el)el.classList.toggle('on',k.toLowerCase()===a);
+  });
+  render();
+};
+window.setHf=function(f){
+  HFONT=f;sset('wpse_hfont',f);
+  document.getElementById('hfSans').classList.toggle('on',f==='DM Sans');
+  document.getElementById('hfSerif').classList.toggle('on',f==='Playfair Display');
+  render();
+};
+
+/* semantic highlight tokenizer — 5 marker types:
+   *gold*  _red_  +green+  [box]  ~strike~  */
+function tokHL(text){
+  var OPEN={'*':'gold','_':'red','+':'green','[':'box','~':'strike'};
+  var CLOSEC={gold:'*',red:'_',green:'+',box:']',strike:'~'};
+  var toks=[],st=null;
+  (text||'').split(/\s+/).forEach(function(raw){
+    if(!raw)return;
+    var w=raw;
+    if(st===null){
+      var f=w.charAt(0);
+      if(OPEN[f]){st=OPEN[f];while(w.charAt(0)===f)w=w.slice(1);}
+    }
+    var myst=st;
+    if(st!==null){
+      var c=CLOSEC[st];
+      if(w.length&&w.charAt(w.length-1)===c){
+        while(w.length&&w.charAt(w.length-1)===c)w=w.slice(0,-1);
+        st=null;
+      }
+    }
+    if(w)toks.push({w:w,st:myst});
+  });
+  // numbers ALWAYS pop: any unmarked token containing digits gets gold
+  toks.forEach(function(tk){
+    if(!tk.st && /[0-9\u0966-\u096F]/.test(tk.w)) tk.st='gold';
+  });
+  return toks;
+}
+function hasHL(toks){for(var i=0;i<toks.length;i++)if(toks[i].st)return true;return false;}
+
+/* wrap tokens with char-ceiling (Devanagari-safe) */
+function wrapHL(g2,toks,maxW,maxL){
+  var fontPx=42;var fm=(g2.font||'').match(/(\d+(?:\.\d+)?)px/);if(fm)fontPx=parseFloat(fm[1]);
+  var ceil=Math.max(6,Math.floor(maxW/(fontPx*0.60)));
+  function fits(s){if(s.length>ceil)return false;return g2.measureText(s).width<=maxW;}
+  var lines=[],cur=[],curTxt='';
+  toks.forEach(function(tk){
+    var test=curTxt?curTxt+' '+tk.w:tk.w;
+    if(!fits(test)&&curTxt){lines.push(cur);cur=[tk];curTxt=tk.w;}
+    else{cur.push(tk);curTxt=test;}
+  });
+  if(cur.length)lines.push(cur);
+  return lines.slice(0,maxL||99);
+}
+var FW='listicle';
+var FMT='tt'; // tt=1080x1920, ig=1080x1350
+var cur=0;
+var slides=[];
+var IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+
+/* slide: {type:'cover'|'item'|'myth'|'truth'|'step'|'payoff', kicker, title, body, num} */
+
+var T={
+  swipe:      {np:'Swipe गर्नुस् →', en:'Swipe →'},
+  next_wild:  {np:'अर्को झन् चाखलाग्दो छ →', en:'The next one is wilder →'},
+  next_big:   {np:'तर सबैभन्दा ठूलो कुरा बाँकी छ →', en:'But the biggest one is coming →'},
+  next_truth: {np:'तर सत्य के हो? →', en:'But what is the truth? →'},
+  next_step:  {np:'अर्को step →', en:'Next step →'},
+  next_after: {np:'अनि के भयो? →', en:'And then? →'},
+  cta_save:   {np:'💾 Save गर्नुस् — पछि काम लाग्छ', en:'💾 Save this — you\u2019ll need it later'},
+  cta_share:  {np:'यो जान्नुपर्ने मान्छेलाई share गर्नुस्', en:'Share this with someone who needs it'},
+  myth_lbl:   {np:'🚫 भ्रम', en:'🚫 MYTH'},
+  truth_lbl:  {np:'✅ सत्य', en:'✅ TRUTH'},
+  the_point:  {np:'मुख्य कुरा', en:'THE POINT'},
+};
+function t(k){var e=T[k];return e?(e[LANG]||e.np):k;}
+
+window.setLang=function(l){
+  LANG=l;sset('wpse_lang',l);
+  document.getElementById('lNp').classList.toggle('on',l==='np');
+  document.getElementById('lEn').classList.toggle('on',l==='en');
+  render();
+};
+
+/* ═══════════ FRAMEWORKS ═══════════ */
+var FRAMEWORKS={
+  listicle:{name:'Listicle', mid:'item', footKey:'next_wild',
+    seed:function(){return[
+      {type:'cover',kicker:'',title:'',body:''},
+      {type:'item',kicker:'1',title:'',body:''},
+      {type:'item',kicker:'2',title:'',body:''},
+      {type:'item',kicker:'3',title:'',body:''},
+      {type:'payoff',kicker:'',title:'',body:''}];}},
+  mythbust:{name:'Myth-Bust', mid:'myth', footKey:'next_truth',
+    seed:function(){return[
+      {type:'cover',kicker:'',title:'',body:''},
+      {type:'myth',kicker:'',title:'',body:''},
+      {type:'truth',kicker:'',title:'',body:''},
+      {type:'myth',kicker:'',title:'',body:''},
+      {type:'truth',kicker:'',title:'',body:''},
+      {type:'payoff',kicker:'',title:'',body:''}];}},
+  story:{name:'Story Arc', mid:'item', footKey:'next_after',
+    seed:function(){return[
+      {type:'cover',kicker:'',title:'',body:''},
+      {type:'item',kicker:'सुरु',title:'',body:''},
+      {type:'item',kicker:'मोड',title:'',body:''},
+      {type:'item',kicker:'twist',title:'',body:''},
+      {type:'payoff',kicker:'',title:'',body:''}];}},
+  checklist:{name:'Checklist', mid:'step', footKey:'next_step',
+    seed:function(){return[
+      {type:'cover',kicker:'',title:'',body:''},
+      {type:'step',kicker:'1',title:'',body:''},
+      {type:'step',kicker:'2',title:'',body:''},
+      {type:'step',kicker:'3',title:'',body:''},
+      {type:'payoff',kicker:'',title:'',body:''}];}},
+  beforeafter:{name:'Before/After', mid:'item', footKey:'next_after',
+    seed:function(){return[
+      {type:'cover',kicker:'',title:'',body:''},
+      {type:'myth',kicker:'BEFORE',title:'',body:''},
+      {type:'truth',kicker:'AFTER',title:'',body:''},
+      {type:'item',kicker:'कसरी?',title:'',body:''},
+      {type:'payoff',kicker:'',title:'',body:''}];}},
+};
+
+window.setFw=function(f){
+  FW=f;
+  ['Listicle','Mythbust','Story','Checklist','Beforeafter'].forEach(function(k){
+    var el=document.getElementById('fw'+k);
+    if(el)el.classList.toggle('on',k.toLowerCase()===f);
+  });
+  if(!slides.length || confirm('Load the '+FRAMEWORKS[f].name+' template? (replaces current slides)')){
+    slides=FRAMEWORKS[f].seed();
+    cur=0;
+  }
+  buildList();render();saveDraft();
+};
+
+/* ═══════════ TOAST / HELPERS ═══════════ */
+function toast(m){var el=document.getElementById('toast');el.textContent=m;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2600);}
+function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+/* wrap with char-ceiling — measureText lies for Devanagari without loaded glyphs */
+function wrap(g,txt,maxW,maxL){
+  if(maxL===undefined)maxL=99;
+  var fontPx=42;var fm=(g.font||'').match(/(\d+(?:\.\d+)?)px/);if(fm)fontPx=parseFloat(fm[1]);
+  var ceil=Math.max(6,Math.floor(maxW/(fontPx*0.60)));
+  function fits(s){if(s.length>ceil)return false;return g.measureText(s).width<=maxW;}
+  var out=[];var paras=(txt||'').split('\n');
+  for(var p=0;p<paras.length;p++){
+    var para=paras[p];if(!para.trim()){out.push('');continue;}
+    var words=para.split(' ');var curL='';
+    for(var w=0;w<words.length;w++){
+      var word=words[w];
+      if(!fits(word)){
+        if(curL){out.push(curL);curL='';}
+        var piece='';
+        for(var c=0;c<word.length;c++){
+          var pt=piece+word[c];
+          if(!fits(pt)&&piece){out.push(piece);piece=word[c];}else piece=pt;
+        }
+        curL=piece;continue;
+      }
+      var test=curL?curL+' '+word:word;
+      if(!fits(test)&&curL){out.push(curL);curL=word;}else curL=test;
+    }
+    if(curL)out.push(curL);
+  }
+  return out.slice(0,maxL);
+}
+
+/* ═══════════ CANVAS RENDER ═══════════ */
+var cv=document.getElementById('cv'),g=cv.getContext('2d');
+function dims(){return FMT==='tt'?{W:1080,H:1920}:{W:1080,H:1350};}
+
+window.setFmt=function(f){
+  FMT=f;
+  document.getElementById('fmtTt').classList.toggle('on',f==='tt');
+  document.getElementById('fmtIg').classList.toggle('on',f==='ig');
+  render();
+};
+
+function fitCv(){
+  var d=dims();
+  var boxW=Math.min(cv.parentElement.clientWidth-20,340);
+  var ph=boxW*(d.H/d.W);
+  cv.style.width=boxW+'px';cv.style.height=ph+'px';
+  cv.width=d.W;cv.height=d.H;
+}
+
+function footerFor(i){
+  var s=slides[i];
+  if(!s)return '';
+  if(s.type==='cover')return t('swipe');
+  if(s.type==='payoff')return '';
+  if(i===slides.length-2)return t('next_big');   // second-to-last teases payoff
+  if(s.type==='myth')return t('next_truth');
+  return t(FRAMEWORKS[FW].footKey);
+}
+
+function drawSlide(i){
+  fitCv();
+  var d=dims(),W=d.W,H=d.H;
+  var s=slides[i]||{type:'cover',title:'',body:'',kicker:''};
+  var pp=Math.round(W*.014);
+  var isShort=(FMT==='ig');
+  var LX=W*0.10;
+  var maxW=W*0.72;
+  var hlC=ACCENTS[ACC]||'#e8c96a';
+  var HF='"'+HFONT+'","Mukta",sans-serif';
+  var BF='"DM Sans","Mukta",sans-serif';
+  // content zone — blocks vertically center inside this
+  var zoneTop=H*.13, zoneBot=H*(isShort?.84:.87), zoneH=zoneBot-zoneTop;
+
+  // bg
+  var gr=g.createLinearGradient(0,0,0,H);
+  gr.addColorStop(0,'#0b0b16');gr.addColorStop(1,'#050509');
+  g.fillStyle=gr;g.fillRect(0,0,W,H);
+  var glow={cover:'rgba(232,201,106,.12)',item:'rgba(74,127,192,.10)',myth:'rgba(201,51,74,.13)',truth:'rgba(62,207,142,.11)',step:'rgba(74,127,192,.10)',payoff:'rgba(232,201,106,.15)'}[s.type]||'rgba(232,201,106,.1)';
+  var rg=g.createRadialGradient(W*.35,H*.4,0,W*.35,H*.4,W*.85);
+  rg.addColorStop(0,glow);rg.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=rg;g.fillRect(0,0,W,H);
+  g.fillStyle='#c9334a';g.fillRect(0,0,pp,H*.5);
+  g.fillStyle='#4a7fc0';g.fillRect(0,H*.5,pp,H*.5);
+
+  // brand
+  var bsz=Math.round(W*.022);
+  g.font='700 '+bsz+'px "Cinzel","Mukta",serif';
+  g.fillStyle='rgba(232,201,106,.55)';g.textAlign='center';
+  g.fillText('THE WALKING PARADOX',W/2,H*.045);
+
+  // counter pill top-left
+  var cnt=(i+1)+'/'+slides.length;
+  var csz=Math.round(W*.027);
+  g.font='800 '+csz+'px '+BF;
+  g.textAlign='left';
+  var cw=g.measureText(cnt).width+W*.032;
+  g.fillStyle='rgba(232,201,106,.9)';
+  rr(LX,H*.028,cw,csz*1.9,csz);g.fill();
+  g.fillStyle='#0c0d15';g.textAlign='center';
+  g.fillText(cnt,LX+cw/2,H*.028+csz*1.35);
+
+  // corner brackets
+  g.strokeStyle='rgba(232,201,106,.3)';g.lineWidth=Math.max(2,W*.0025);
+  var m=W*.045,len=W*.04;
+  g.beginPath();g.moveTo(W-m-len,m);g.lineTo(W-m,m);g.lineTo(W-m,m+len);g.stroke();
+  g.beginPath();g.moveTo(m,H-m-len);g.lineTo(m,H-m);g.lineTo(m+len,H-m);g.stroke();
+
+  // semantic rich line drawer
+  function drawHL(lines,x,y,lh,baseC){
+    g.textAlign='left';
+    var fontPx=42;var fm=(g.font||'').match(/(\d+(?:\.\d+)?)px/);if(fm)fontPx=parseFloat(fm[1]);
+    var COL={gold:hlC,red:'#ff5d75',green:'#3ecf8e'};
+    lines.forEach(function(line,li){
+      var xx=x,yy=y+li*lh;
+      line.forEach(function(tk){
+        var wpx=g.measureText(tk.w).width;
+        if(tk.st==='box'){
+          g.shadowBlur=0;g.shadowOffsetY=0;
+          var padX=fontPx*.16,padY=fontPx*.10;
+          g.fillStyle=hlC;
+          rr(xx-padX,yy-fontPx*.78-padY,wpx+padX*2,fontPx*1.0+padY*2,fontPx*.15);g.fill();
+          g.fillStyle='#0c0d15';
+          g.fillText(tk.w,xx,yy);
+        } else if(tk.st==='strike'){
+          g.shadowColor='rgba(0,0,0,.9)';g.shadowBlur=W*.012;g.shadowOffsetY=W*.002;
+          g.fillStyle='rgba(255,110,130,.8)';
+          g.fillText(tk.w,xx,yy);
+          g.shadowBlur=0;g.shadowOffsetY=0;
+          g.strokeStyle='#ff5d75';g.lineWidth=Math.max(3,fontPx*.075);
+          g.beginPath();g.moveTo(xx-fontPx*.04,yy-fontPx*.3);g.lineTo(xx+wpx+fontPx*.04,yy-fontPx*.3);g.stroke();
+        } else {
+          g.shadowColor='rgba(0,0,0,.9)';g.shadowBlur=W*.014;g.shadowOffsetY=W*.002;
+          g.fillStyle=tk.st?(COL[tk.st]||hlC):baseC;
+          g.fillText(tk.w,xx,yy);
+          g.shadowBlur=0;g.shadowOffsetY=0;
+        }
+        xx+=g.measureText(tk.w+' ').width;
+      });
+    });
+    g.shadowBlur=0;g.shadowOffsetY=0;
+  }
+
+  if(s.type==='cover'){
+    var tag=(document.getElementById('seriesTag').value||'').trim();
+    // MEASURE — auto-GROW for short hooks (the thumbnail deserves size)
+    var toks=tokHL(s.title||'Your *hook* here');
+    if(!hasHL(toks)&&toks.length>1){toks[toks.length-1].st='gold';if(toks.length>3)toks[toks.length-2].st='gold';}
+    var plainLen=(s.title||'').replace(/[*_+\[\]~]/g,'').length;
+    var hsz=plainLen<40?Math.round(W*.11):plainLen<75?Math.round(W*.098):Math.round(W*.088);
+    var lines,guard=0;
+    do{
+      g.font='900 '+hsz+'px '+HF;
+      lines=wrapHL(g,toks,maxW,7);
+      if(lines.length*hsz*1.22<=zoneH*.62||hsz<=Math.round(W*.05))break;
+      hsz=Math.round(hsz*.92);guard++;
+    }while(guard<9);
+    var hookH=lines.length*hsz*1.22;
+    var ssz=Math.round(W*.038);var sl=null,subH=0;
+    if(s.body){
+      g.font='600 '+ssz+'px '+BF;
+      sl=wrapHL(g,tokHL(s.body),maxW,3);
+      subH=W*.09+sl.length*ssz*1.5;
+    }
+    var tagH=tag?W*.075:0;
+    var total=tagH+hookH+hsz*.55+subH;
+    var y0=zoneTop+Math.max(0,(zoneH-total)/2);
+    // DRAW
+    if(tag){
+      var tsz=Math.round(W*.028);
+      g.font='800 '+tsz+'px '+BF;
+      g.fillStyle=hlC;g.textAlign='left';
+      if('letterSpacing' in g)g.letterSpacing='3px';
+      g.fillText(tag.toUpperCase(),LX,y0+tsz);
+      if('letterSpacing' in g)g.letterSpacing='0px';
+    }
+    var hookY=y0+tagH+hsz*.9;
+    g.font='900 '+hsz+'px '+HF;
+    drawHL(lines,LX,hookY,hsz*1.22,'#f7f2ea');
+    var afterHook=hookY+(lines.length-1)*hsz*1.22;
+    g.fillStyle=hlC;
+    g.fillRect(LX,afterHook+hsz*.42,W*.16,Math.max(4,W*.006));
+    if(sl){
+      g.font='600 '+ssz+'px '+BF;
+      drawHL(sl,LX,afterHook+hsz*.42+W*.085,ssz*1.5,'rgba(212,205,192,.9)');
+    }
+  }
+  else if(s.type==='payoff'){
+    // MEASURE
+    var itoks=tokHL(s.title||'The payoff insight');
+    var iPlain=(s.title||'').replace(/[*_+\[\]~]/g,'').length;
+    var isz=iPlain<50?Math.round(W*.078):iPlain<100?Math.round(W*.068):Math.round(W*.06);
+    var il,ig2=0;
+    do{
+      g.font='800 '+isz+'px '+HF;
+      il=wrapHL(g,itoks,maxW,7);
+      if(il.length*isz*1.3<=zoneH*.5||isz<=Math.round(W*.04))break;
+      isz=Math.round(isz*.92);ig2++;
+    }while(ig2<8);
+    var insH=il.length*isz*1.3;
+    var ctaTxt=s.body||t('cta_save');
+    var csz2=Math.round(W*.042);
+    g.font='700 '+csz2+'px '+BF;
+    var cl=wrapHL(g,tokHL(ctaTxt),maxW*.88,3);
+    var boxH=cl.length*csz2*1.5+W*.055;
+    var ksz=Math.round(W*.028);
+    var total=W*.075+insH+W*.11+boxH;
+    var y0=zoneTop+Math.max(0,(zoneH-total)/2);
+    // DRAW
+    g.font='800 '+ksz+'px '+BF;
+    g.fillStyle=hlC;g.textAlign='left';
+    if('letterSpacing' in g)g.letterSpacing='3px';
+    g.fillText(t('the_point').toUpperCase(),LX,y0+ksz);
+    if('letterSpacing' in g)g.letterSpacing='0px';
+    var py=y0+W*.075+isz*.85;
+    g.font='800 '+isz+'px '+HF;
+    drawHL(il,LX,py,isz*1.3,'#f7f2ea');
+    var afterY=py+(il.length-1)*isz*1.3+W*.09;
+    g.fillStyle='rgba(232,201,106,.09)';
+    rr(LX,afterY,maxW,boxH,W*.02);g.fill();
+    g.strokeStyle=hlC;g.lineWidth=Math.max(2,W*.003);
+    rr(LX,afterY,maxW,boxH,W*.02);g.stroke();
+    g.font='700 '+csz2+'px '+BF;
+    drawHL(cl,LX+W*.035,afterY+W*.045+csz2*.45,csz2*1.5,hlC);
+  }
+  else{
+    // ITEM / MYTH / STEP / TRUTH — measure then center
+    var segs=[];
+    var isStmt=(s.type==='myth'||s.type==='truth')&&!s.title;
+    var lsz=Math.round(W*.04), nsz=Math.round(W*.12);
+    var hasLabel=(s.type==='myth'||s.type==='truth');
+    var hasKick=!hasLabel&&!!s.kicker;
+    var ttoks=null,tl2=null,tsz2=0;
+    if(s.title){
+      ttoks=tokHL(s.title);
+      if(!hasHL(ttoks)&&ttoks.length>1){ttoks[ttoks.length-1].st='gold';if(ttoks.length>4)ttoks[ttoks.length-2].st='gold';}
+      tsz2=Math.round(W*.064);var tg=0;
+      do{
+        g.font='900 '+tsz2+'px '+HF;
+        tl2=wrapHL(g,ttoks,maxW,4);
+        if(tl2.length*tsz2*1.25<=zoneH*.32||tsz2<=Math.round(W*.042))break;
+        tsz2=Math.round(tsz2*.92);tg++;
+      }while(tg<6);
+    }
+    var btoks=null,bl=null,bsz2=0;
+    if(s.body){
+      btoks=tokHL(s.body);
+      var bPlain=(s.body||'').replace(/[*_+\[\]~]/g,'').length;
+      // auto-GROW: short statements render HUGE (the viral grammar)
+      if(isStmt) bsz2=bPlain<70?Math.round(W*.075):bPlain<130?Math.round(W*.064):Math.round(W*.054);
+      else bsz2=bPlain<90?Math.round(W*.052):Math.round(W*.046);
+      var bg2=0;
+      do{
+        g.font=(isStmt?'700 ':'600 ')+bsz2+'px '+BF;
+        bl=wrapHL(g,btoks,maxW,9);
+        if(bl.length*bsz2*1.55<=zoneH*.6||bsz2<=Math.round(W*.03))break;
+        bsz2=Math.round(bsz2*.92);bg2++;
+      }while(bg2<7);
+    }
+    var total=0;
+    if(hasLabel)total+=lsz*2.9;
+    if(hasKick)total+=nsz*.95;
+    if(tl2)total+=W*.05+tl2.length*tsz2*1.25;
+    if(bl)total+=W*.07+bl.length*bsz2*1.55;
+    var y0=zoneTop+Math.max(0,(zoneH-total)/2);
+    var topY=y0;
+    // DRAW
+    if(hasLabel){
+      var lbl=s.type==='myth'?t('myth_lbl'):t('truth_lbl');
+      if(s.kicker&&s.kicker.toUpperCase()!==lbl)lbl=(s.type==='myth'?'🚫 ':'✅ ')+s.kicker;
+      g.font='800 '+lsz+'px '+BF;
+      g.textAlign='left';
+      var lw=g.measureText(lbl).width+W*.055;
+      g.fillStyle=s.type==='myth'?'rgba(201,51,74,.18)':'rgba(62,207,142,.14)';
+      rr(LX,topY,lw,lsz*2,lsz);g.fill();
+      g.strokeStyle=s.type==='myth'?'#c9334a':'#3ecf8e';g.lineWidth=Math.max(2,W*.0025);
+      rr(LX,topY,lw,lsz*2,lsz);g.stroke();
+      g.fillStyle=s.type==='myth'?'#ff8a99':'#8beebf';
+      g.fillText(lbl,LX+W*.028,topY+lsz*1.35);
+      topY+=lsz*2.9;
+    } else if(hasKick){
+      g.font='900 '+nsz+'px '+HF;
+      g.fillStyle=hlC;g.textAlign='left';
+      g.shadowColor='rgba(0,0,0,.85)';g.shadowBlur=W*.018;
+      var kk=s.type==='step'?('✓ '+s.kicker):('#'+s.kicker);
+      if(isNaN(parseInt(s.kicker,10)))kk=s.kicker;
+      g.fillText(kk,LX,topY+nsz*.8);
+      g.shadowBlur=0;
+      topY+=nsz*.95;
+    }
+    if(tl2){
+      g.font='900 '+tsz2+'px '+HF;
+      drawHL(tl2,LX,topY+W*.05+tsz2*.8,tsz2*1.25,'#f7f2ea');
+      topY+=W*.05+tl2.length*tsz2*1.25;
+    }
+    if(bl){
+      g.font=(isStmt?'700 ':'600 ')+bsz2+'px '+BF;
+      drawHL(bl,LX,topY+W*.07+bsz2*.8,bsz2*1.55,isStmt?'#f2ecdf':'rgba(236,229,216,.95)');
+    }
+  }
+
+  // cliffhanger footer
+  var foot=footerFor(i);
+  if(foot){
+    var fsz=Math.round(W*.034);
+    g.font='700 italic '+fsz+'px '+BF;
+    g.fillStyle=hlC;g.textAlign='left';
+    g.shadowColor='rgba(0,0,0,.8)';g.shadowBlur=W*.012;
+    g.fillText(foot,LX,H*(isShort?.9:.92));
+    g.shadowBlur=0;
+  }
+  var fb=Math.round(W*.02);
+  g.font='600 '+fb+'px '+BF;
+  g.fillStyle='rgba(160,155,142,.5)';g.textAlign='left';
+  g.fillText('@walkingparadox',LX,H*.972);
+
+  function rr(x,y,w2,h2,r){
+    g.beginPath();
+    g.moveTo(x+r,y);g.arcTo(x+w2,y,x+w2,y+h2,r);g.arcTo(x+w2,y+h2,x,y+h2,r);
+    g.arcTo(x,y+h2,x,y,r);g.arcTo(x,y,x+w2,y,r);g.closePath();
+  }
+}
+
+function render(){
+  if(!slides.length){slides=FRAMEWORKS[FW].seed();}
+  cur=Math.max(0,Math.min(cur,slides.length-1));
+  drawSlide(cur);
+  document.getElementById('navLbl').textContent='Slide '+(cur+1)+' of '+slides.length;
+  document.getElementById('slideCount').textContent=slides.length;
+}
+window.nav=function(d){cur=Math.max(0,Math.min(cur+d,slides.length-1));render();};
+
+/* ═══════════ SLIDE LIST UI ═══════════ */
+function buildList(){
+  var el=document.getElementById('slideList');
+  el.innerHTML=slides.map(function(s,i){
+    return '<div class="slide-row">'
+      +'<div class="hd"><span class="tp '+s.type+'">'+s.type+'</span>'
+      +'<span><button class="mini" onclick="moveSlide('+i+',-1)">↑</button>'
+      +'<button class="mini" onclick="moveSlide('+i+',1)">↓</button>'
+      +'<button class="mini" onclick="delSlide('+i+')">✕</button></span></div>'
+      +(s.type!=='cover'&&s.type!=='payoff'?'<input placeholder="Number / kicker (e.g. 1, BEFORE)" value="'+esc(s.kicker)+'" oninput="upd('+i+',\'kicker\',this.value)" style="margin-bottom:6px"/>':'')
+      +'<input placeholder="'+(s.type==='cover'?'HOOK headline':s.type==='payoff'?'Payoff insight':'Title')+'" value="'+esc(s.title)+'" oninput="upd('+i+',\'title\',this.value)" style="margin-bottom:6px"/>'
+      +'<textarea rows="2" placeholder="'+(s.type==='cover'?'Sub-line (optional)':s.type==='payoff'?'CTA (leave empty = auto save-CTA)':'Body text')+'" oninput="upd('+i+',\'body\',this.value)">'+esc(s.body)+'</textarea>'
+      +'</div>';
+  }).join('');
+}
+window.upd=function(i,k,v){slides[i][k]=v;saveDraft();if(i===cur)render();};
+window.moveSlide=function(i,d){
+  var j=i+d;if(j<0||j>=slides.length)return;
+  var tmp=slides[i];slides[i]=slides[j];slides[j]=tmp;
+  buildList();saveDraft();render();
+};
+window.delSlide=function(i){slides.splice(i,1);if(!slides.length)slides=FRAMEWORKS[FW].seed();buildList();saveDraft();render();};
+window.addSlide=function(){
+  var mid=FRAMEWORKS[FW].mid;
+  var insertAt=slides.length>1?slides.length-1:slides.length; // before payoff
+  slides.splice(insertAt,0,{type:mid,kicker:'',title:'',body:''});
+  buildList();saveDraft();render();
+};
+
+/* ═══════════ AI PROMPT + PARSE ═══════════ */
+window.copyAiPrompt=function(){
+  var langNote=LANG==='en'?'Write everything in ENGLISH only.':'Write in Nepali (mixed Nepali/English natural style is fine). ONE language style throughout — never give two translations of the same line.';
+  var fw=FRAMEWORKS[FW].name;
+  var today=new Date().toDateString();
+  var prompt='You are a carousel content writer for "The Walking Paradox" — a Nepali page about facts, quizzes and truth-checks.\n\n'
+    +'Create a '+fw+' carousel about: [YOUR TOPIC HERE]\n\n'
+    +'CRITICAL RULES:\n'
+    +'- '+langNote+'\n'
+    +'- Verified facts only (today is '+today+').\n'
+    +'- COVER hook must create a curiosity gap (a question or bold claim, UNDER 10 WORDS — it must be readable in 0.7 seconds).\n'
+    +'- COLOR-MARK PHRASES for visual rhythm — this is critical. Mark whole 2-4 word PHRASES, never lone words. Per slide: 1-2 *gold phrases* (the key insight), plus where fitting one _red phrase_ (the shocking part / alarming stat) and one +green phrase+ (the positive / the truth). TARGET: roughly ONE THIRD of each slide\u2019s words carry color — enough for rhythm, never everything. EVERY number or stat MUST be marked (_red_ if alarming, *gold* otherwise). The hook must have its 2-4 most powerful words marked. Put THE single most important number of the whole carousel in [square brackets] (highlighter box) — exactly once. In myth-bust content wrap the lie in ~tildes~ (struck through).\nDENSITY EXAMPLE (copy this rhythm): _99% नेपालीहरूलाई_ थाहा छैन — Nepal को *सबैभन्दा गहिरो* gorge [5571m] छ, Grand Canyon भन्दा +धेरै गहिरो+ ।\n'
+    +'- Each middle slide reveals NEW info — progressive reveal, no repetition.\n'
+    +'- 4-8 middle slides. Slide bodies under 220 characters each.\n'
+    +'- PAYOFF is the single best insight — the reward for swiping to the end.\n'
+    +'- CAPTION: keyword-first for search (TikTok SEO), then a question, then 4 hashtags (mix big + niche).\n\n'
+    +'OUTPUT EXACTLY THIS FORMAT:\n'
+    +'COVER: <hook headline> | <optional sub-line>\n'
+    +(FW==='mythbust'
+      ?'MYTH: <the false belief>\nTRUTH: <the fact with evidence>\n(repeat MYTH/TRUTH pairs 2-3 times)\n'
+      :FW==='checklist'
+      ?'STEP: <step number> | <step title> | <how to do it>\n(repeat 4-7 steps)\n'
+      :'SLIDE: <number or kicker> | <title> | <body>\n(repeat 4-8 slides)\n')
+    +'PAYOFF: <the best insight> | <specific save/share CTA>\n'
+    +'CAPTION: <seo caption with hashtags>';
+  copyText(prompt,'📋 '+fw+' prompt copied — paste in ChatGPT/Gemini');
+};
+
+function copyText(txt,msg){
+  var done=function(){toast(msg);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(function(){fb(txt);done();});}
+  else{fb(txt);done();}
+  function fb(x){var ta=document.createElement('textarea');ta.value=x;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}
+}
+
+window.openPaste=function(){document.getElementById('overlay').style.display='block';};
+window.closePaste=function(){document.getElementById('overlay').style.display='none';};
+
+window.runParse=function(){
+  var text=document.getElementById('pasteBox').value||'';
+  if(!text.trim()){toast('Paste the AI answer first');return;}
+  var ns=[];
+  var lines=text.split('\n');
+  var strip=function(s){return (s||'').trim().replace(/^["'\u201C\u201D]+|["'\u201C\u201D]+$/g,'').trim();};
+  lines.forEach(function(ln){
+    var mm;
+    if((mm=ln.match(/^\s*COVER:\s*(.+)$/i))){
+      var p=mm[1].split('|');
+      ns.push({type:'cover',kicker:'',title:strip(p[0]),body:strip(p[1]||'')});
+    } else if((mm=ln.match(/^\s*MYTH:\s*(.+)$/i))){
+      ns.push({type:'myth',kicker:'',title:'',body:strip(mm[1])});
+    } else if((mm=ln.match(/^\s*TRUTH:\s*(.+)$/i))){
+      ns.push({type:'truth',kicker:'',title:'',body:strip(mm[1])});
+    } else if((mm=ln.match(/^\s*STEP:\s*(.+)$/i))){
+      var p2=mm[1].split('|');
+      ns.push({type:'step',kicker:strip(p2[0]),title:strip(p2[1]||''),body:strip(p2[2]||'')});
+    } else if((mm=ln.match(/^\s*SLIDE:\s*(.+)$/i))){
+      var p3=mm[1].split('|');
+      ns.push({type:'item',kicker:strip(p3[0]),title:strip(p3[1]||''),body:strip(p3[2]||'')});
+    } else if((mm=ln.match(/^\s*PAYOFF:\s*(.+)$/i))){
+      var p4=mm[1].split('|');
+      ns.push({type:'payoff',kicker:'',title:strip(p4[0]),body:strip(p4[1]||'')});
+    } else if((mm=ln.match(/^\s*CAPTION:\s*(.+)$/i))){
+      document.getElementById('capOut').value=strip(mm[1]);
+    }
+  });
+  if(ns.length<2){toast('❌ Could not find COVER/SLIDE lines — check the format');return;}
+  slides=ns;cur=0;
+  buildList();render();saveDraft();
+  closePaste();
+  document.getElementById('pasteBox').value='';
+  toast('✅ '+ns.length+' slides filled — check the preview');
+};
+
+/* ═══════════ EXPORT ═══════════ */
+function slideBlob(i){
+  return new Promise(function(res){
+    drawSlide(i);
+    cv.toBlob(function(b){res(b);},'image/png');
+  });
+}
+
+window.exportOne=function(){
+  slideBlob(cur).then(function(b){
+    shareFiles([new File([b],'wp-slide-'+(cur+1)+'.png',{type:'image/png'})],'Slide '+(cur+1));
+  });
+};
+
+window.exportAll=async function(){
+  if(!slides.length){toast('No slides');return;}
+  toast('Rendering '+slides.length+' slides…');
+  var files=[];
+  for(var i=0;i<slides.length;i++){
+    var b=await slideBlob(i);
+    files.push(new File([b],'wp-carousel-'+String(i+1).padStart(2,'0')+'.png',{type:'image/png'}));
+  }
+  drawSlide(cur);
+  shareFiles(files,slides.length+' slides');
+};
+
+function shareFiles(files,label){
+  if(navigator.canShare && navigator.canShare({files:files}) && navigator.share){
+    navigator.share({files:files,title:'Walking Paradox carousel'}).then(function(){
+      toast('📤 Shared — save to Photos, then upload as photo post');
+    }).catch(function(e){
+      if(e && e.name!=='AbortError'){seqDownload(files);}
+    });
+  } else {
+    seqDownload(files);
+  }
+}
+function seqDownload(files){
+  var i=0;
+  (function next(){
+    if(i>=files.length){toast('⬇ '+files.length+' PNGs downloaded');return;}
+    var url=URL.createObjectURL(files[i]);
+    var a=document.createElement('a');a.href=url;a.download=files[i].name;a.click();
+    setTimeout(function(){URL.revokeObjectURL(url);i++;next();},400);
+  })();
+}
+
+/* ═══════════ SEO CAPTION ═══════════ */
+window.buildCaption=function(){
+  var topic=(document.getElementById('capTopic').value||'').trim();
+  var keys=(document.getElementById('capKeys').value||'').split(',').map(function(k){return k.trim();}).filter(Boolean);
+  if(!topic){document.getElementById('capOut').value='';return;}
+  var cover=slides[0]&&slides[0].title?slides[0].title:'';
+  var q=LANG==='np'?'तपाईंलाई कुन चाहिँ थाहा थियो? Comment मा भन्नुस् 👇':'Which one did you already know? Tell us below 👇';
+  var save=LANG==='np'?'💾 Save गर्नुस् — पछि काम लाग्छ।':'💾 Save this for later.';
+  var tags='#'+topic.replace(/\s+/g,'').toLowerCase();
+  keys.slice(0,3).forEach(function(k){tags+=' #'+k.replace(/\s+/g,'').toLowerCase();});
+  tags+=' #nepal #walkingparadox';
+  var cap=topic+(cover?' — '+cover:'')+'\n\n'+q+'\n'+save+'\n\n'+tags;
+  document.getElementById('capOut').value=cap;
+};
+window.copyCaption=function(){
+  var c=document.getElementById('capOut').value;
+  if(!c){toast('Build the caption first');return;}
+  copyText(c,'📋 Caption copied');
+};
+
+/* ═══════════ DRAFTS ═══════════ */
+function saveDraft(){
+  sset('wpse_draft',{fw:FW,slides:slides,series:(document.getElementById('seriesTag').value||''),ts:Date.now()});
+}
+window.saveDraft=saveDraft;
+function loadDraft(){
+  var d=sget('wpse_draft',null);
+  if(d && d.slides && d.slides.length && (Date.now()-d.ts)<7*86400000){
+    FW=d.fw||'listicle';slides=d.slides;
+    document.getElementById('seriesTag').value=d.series||'';
+    ['Listicle','Mythbust','Story','Checklist','Beforeafter'].forEach(function(k){
+      var el=document.getElementById('fw'+k);
+      if(el)el.classList.toggle('on',k.toLowerCase()===FW);
+    });
+    toast('📂 Draft restored');
+  } else {
+    slides=FRAMEWORKS.listicle.seed();
+  }
+}
+
+/* boot */
+document.getElementById('lNp').classList.toggle('on',LANG==='np');
+document.getElementById('lEn').classList.toggle('on',LANG==='en');
+loadDraft();
+buildList();
+render();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){render();});
+window.addEventListener('resize',render);
+
+}catch(err){
+  document.body.innerHTML='<div style="padding:30px;color:#f5f0e8;font-family:sans-serif"><h3 style="color:#c9334a">Startup error</h3><pre style="white-space:pre-wrap;font-size:12px">'+(err&&err.stack||err)+'</pre></div>';
+}
+})();
+</script>
+</body>
+</html>
