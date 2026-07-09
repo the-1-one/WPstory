@@ -114,7 +114,8 @@ canvas{max-width:100%;border-radius:8px}
       <button class="btn2" onclick="copyAiPrompt()">📋 Copy AI Prompt</button>
       <button class="btn2" onclick="openPaste()">📥 Paste Result</button>
     </div>
-    <div class="dim" style="margin-top:8px">Or edit slides manually below.</div>
+    <button class="btn3" style="width:100%;margin-top:8px" onclick="copyRefinePrompt()">🔁 Copy REFINE prompt (paste after the AI answers — works for every format)</button>
+    <div class="dim" style="margin-top:8px">Workflow: Copy prompt → ChatGPT/Gemini → paste its answer here. For best results: paste the Refine prompt as your second message, then use THAT improved answer.</div>
   </div>
 
   <div class="card">
@@ -2676,27 +2677,35 @@ window.addSlide=function(){
 };
 
 /* ═══════════ AI PROMPT + PARSE ═══════════ */
+/* ── PROMPT SYSTEM: shared contracts (voice, accuracy, staged process) ── */
+var P_VOICE='VOICE CONTRACT (strict): Write like a sharp Nepali friend revealing a secret — never a textbook, never a news anchor. Short punchy lines. Natural Kathmandu-style Nepali-English mixing. BANNED: "in today\'s world", "delve", "unlock", "game-changer", "let\'s explore", "journey", "amazing", moral-lesson endings, exclamation spam, perfectly formal textbook Nepali. If a line could appear in any generic AI post, rewrite it until it sounds typed by a real person.';
+var P_ACC='ACCURACY CONTRACT (strict): Use ONLY facts you are highly confident are documented. If you have web access, verify every number and name before output. NEVER invent or estimate a statistic. If a fact is shaky, replace it with a verified one — do not guess. One wrong fact destroys this page\'s credibility.';
+var P_STEPS='PROCESS — do these steps silently, show ONLY the final output:\nStep 1: Write 3 different hook angles. Judge them — which creates the strongest curiosity gap in under 10 words?\nStep 2: Draft the full piece using the winning hook.\nStep 3: Self-check the draft: any line that sounds AI-written? any fact you cannot verify? anything too long? Fix all of it.\nStep 4: Output ONLY the final result in the exact format below. No preamble, no explanations, no markdown.';
+window.copyRefinePrompt=function(){
+  copyText('Now audit your output above like a harsh editor, then give me the improved version in the SAME exact format (output nothing else):\n1. HOOK: under 10 words? real curiosity gap? Would a stranger stop scrolling for it?\n2. HUMAN TEST: read every line — anything that sounds like generic AI gets rewritten in real Nepali-creator voice.\n3. FACT AUDIT: name any claim you are less than fully sure about — replace it with a stronger verified fact.\n4. RHYTHM: cut filler words, tighten every line, move the color marks onto the most powerful words.\n5. ENDING: does it earn a comment or a share, not just a view? If not, rewrite it.','🔁 Refine prompt copied — paste as your NEXT message in the same chat');
+};
+
 window.copyAiPrompt=function(){
-  var langNote=LANG==='en'?'Write everything in ENGLISH only.':'Write in Nepali (mixed Nepali/English natural style is fine). ONE language style throughout — never give two translations of the same line.';
+  var langNote=LANG==='en'?'Write everything in ENGLISH only.':'Write in natural Nepali (mixed Nepali/English the way Kathmandu people talk). ONE language style throughout — never give two translations of the same line.';
   var fw=FRAMEWORKS[FW].name;
   var today=new Date().toDateString();
-  var prompt='You are a carousel content writer for "The Walking Paradox" — a Nepali page about facts, quizzes and truth-checks.\n\n'
-    +'Create a '+fw+' carousel about: [YOUR TOPIC HERE]\n\n'
-    +'CRITICAL RULES:\n'
+  var prompt='ROLE: You are the carousel writer for "The Walking Paradox" — a Nepali page trusted for facts, quizzes and truth-checks. Today is '+today+'.\n\n'
+    +P_VOICE+'\n\n'+P_ACC+'\n\n'
+    +'TASK: Create a '+fw+' carousel about: [YOUR TOPIC HERE]\n\n'
+    +'FORMAT RULES:\n'
     +'- '+langNote+'\n'
-    +'- Verified facts only (today is '+today+').\n'
-    +'- COVER hook must create a curiosity gap (a question or bold claim, UNDER 10 WORDS — it must be readable in 0.7 seconds).\n'
-    +'- COLOR-MARK PHRASES for visual rhythm — this is critical. Mark whole 2-4 word PHRASES, never lone words. Per slide: 1-2 *gold phrases* (the key insight), plus where fitting one _red phrase_ (the shocking part / alarming stat) and one +green phrase+ (the positive / the truth). TARGET: roughly ONE THIRD of each slide\u2019s words carry color — enough for rhythm, never everything. EVERY number or stat MUST be marked (_red_ if alarming, *gold* otherwise). The hook must have its 2-4 most powerful words marked. Put THE single most important number of the whole carousel in [square brackets] (highlighter box) — exactly once. In myth-bust content wrap the lie in ~tildes~ (struck through).\nDENSITY EXAMPLE (copy this rhythm): _99% नेपालीहरूलाई_ थाहा छैन — Nepal को *सबैभन्दा गहिरो* gorge [5571m] छ, Grand Canyon भन्दा +धेरै गहिरो+ ।\n'
-    +'- Each middle slide reveals NEW info — progressive reveal, no repetition.\n'
-    +'- 4-8 middle slides. Slide bodies under 220 characters each.\n'
-    +'- PAYOFF is the single best insight — the reward for swiping to the end.\n'
-    +'- CAPTION: keyword-first for search (TikTok SEO), then a question, then 4 hashtags (mix big + niche).\n\n'
+    +'- COVER hook: under 10 words, curiosity gap, readable in 0.7 seconds.\n'
+    +'- Each middle slide reveals NEW info — progressive reveal, no repetition. 4-8 middle slides, bodies under 220 characters.\n'
+    +'- PAYOFF: the single best insight — the reward for swiping to the end.\n'
+    +'- COLOR-MARK whole 2-4 word PHRASES (about a third of each slide\'s words): *gold = key insight*, _red = shock/alarming stat_, +green = positive/truth+. Every number MUST be marked. Put THE most important number of the carousel in [square brackets] exactly once. In myth-bust content wrap the lie in ~tildes~.\n'
+    +'- CAPTION: keyword-first for search, then a question, then 4 hashtags (mix big + niche).\n\n'
+    +P_STEPS+'\n\n'
     +'OUTPUT EXACTLY THIS FORMAT:\n'
-    +'COVER: <hook headline> | <optional sub-line>\n'
+    +'COVER: <hook> | <optional sub-line>\n'
     +(FW==='mythbust'
       ?'MYTH: <the false belief>\nTRUTH: <the fact with evidence>\n(repeat MYTH/TRUTH pairs 2-3 times)\n'
       :FW==='checklist'
-      ?'STEP: <step number> | <step title> | <how to do it>\n(repeat 4-7 steps)\n'
+      ?'STEP: <number> | <step title> | <how to do it>\n(repeat 4-7 steps)\n'
       :'SLIDE: <number or kicker> | <title> | <body>\n(repeat 4-8 slides)\n')
     +'PAYOFF: <the best insight> | <specific save/share CTA>\n'
     +'CAPTION: <seo caption with hashtags>';
@@ -3524,13 +3533,25 @@ var VIRAL=(function(){
   }
 
   function csPrompt(){
-    copyText('You write viral text-message story reels for "The Walking Paradox" (Nepal facts/truth page).\n\nTopic: [YOUR TOPIC HERE]\n\nOutput format — EXACTLY, nothing else:\nLine 1: contact name (e.g. Unknown Number, दाइ, साथी)\nThen 6-10 lines alternating:\nA: <their message>\nB: <reply>\n\nRules: FIRST message must shock or hook instantly. Short messages (under 12 words). Build curiosity each message. The last message = the payoff fact. '+(LANG==='en'?'English only.':'Natural Nepali.')+'\n\nOutput ONLY the lines.','📋 Chat Story prompt copied');
+    copyText('ROLE: You write text-message story reels for "The Walking Paradox" (Nepal facts/truth page).\n\n'
+      +P_VOICE+'\n\n'+P_ACC+'\n\n'
+      +'TASK: Write a 6-10 message conversation about: [YOUR TOPIC HERE]\n\n'
+      +'TEXTING RULES — this must feel screenshot-real:\n- Text like real people text: short messages, casual spelling, reactions BEFORE information ("k?", "hoina hola!", "पख पख"), no perfect punctuation, never a full paragraph in one bubble.\n- '+(LANG==='en'?'English texting style.':'Natural Nepali texting (how people actually type on messenger).')+'\n- FIRST message must shock or hook instantly — it is the first frame.\n- Curiosity builds message by message. The LAST message = the verified payoff fact.\n\n'
+      +P_STEPS+'\n\nOUTPUT EXACTLY:\nLine 1: contact name (e.g. Unknown Number, दाइ, साथी)\nThen alternating lines:\nA: <their message>\nB: <reply>\nNothing else — I paste directly.','📋 Chat Story prompt copied');
   }
   function ssPrompt(){
-    copyText('You write data-drama reels for "The Walking Paradox".\n\nTopic: [YOUR TOPIC HERE]\n\nOutput format — EXACTLY, nothing else:\nLine 1: hook title (under 8 words)\nThen 3-5 lines: Label | Number | suffix | one-line context\n\nRules: numbers must be verified and SURPRISING, ascending shock order, context under 8 words. '+(LANG==='en'?'English only.':'Nepali labels.')+'\n\nExample line: काली गण्डकी गहिराइ | 5571 | m | Grand Canyon भन्दा गहिरो\n\nOutput ONLY the lines.','📋 Stat Slam prompt copied');
+    copyText('ROLE: You write data-drama reels for "The Walking Paradox".\n\n'
+      +P_VOICE+'\n\n'+P_ACC+'\n\n'
+      +'TASK: Find 3-5 SHOCKING verified numbers about: [YOUR TOPIC HERE]\n\n'
+      +'DATA RULES:\n- Every number must be attributable to a known source (World Bank, government data, Guinness, census, major studies). If you cannot name the source to yourself, do not use the number.\n- '+(LANG==='en'?'English labels.':'Nepali labels.')+'\n- Ascending shock order — save the most unbelievable for last.\n- The context line is the COMPARISON that makes the number hit (e.g. "Grand Canyon भन्दा गहिरो") — under 8 words.\n\n'
+      +P_STEPS+'\n\nOUTPUT EXACTLY:\nLine 1: hook title (under 8 words)\nThen one line per stat: Label | Number | suffix | context comparison\nNothing else — I paste directly.','📋 Stat Slam prompt copied');
   }
   function ttPrompt(){
-    copyText('You write This-or-That vote reels for "The Walking Paradox" (Nepali audience).\n\nTopic: [YOUR TOPIC HERE]\n\nOutput format — EXACTLY, nothing else:\nLine 1: catchy title (under 7 words)\nThen 4-6 lines: Option A | Option B\n\nRules: genuinely hard choices that split people 50/50 (that is what drives comments), add one emoji per option, keep each under 4 words. '+(LANG==='en'?'English only.':'Nepali.')+'\n\nOutput ONLY the lines.','📋 This-or-That prompt copied');
+    copyText('ROLE: You write This-or-That vote reels for "The Walking Paradox" (Nepali audience).\n\n'
+      +P_VOICE+'\n\n'
+      +'TASK: Write 4-6 A-vs-B rounds about: [YOUR TOPIC HERE]\n\n'
+      +'VOTE RULES:\n- Each pair must genuinely split Nepalis 50/50 — the comment-section fight IS the content. If one side obviously wins, replace the pair.\n- Local, emotional, culturally loaded choices beat generic ones (places, food, habits, generational splits).\n- '+(LANG==='en'?'English.':'Nepali.')+' One emoji per option, each option under 4 words.\n\n'
+      +P_STEPS+'\n\nOUTPUT EXACTLY:\nLine 1: catchy title (under 7 words)\nThen one line per round: Option A | Option B\nNothing else — I paste directly.','📋 This-or-That prompt copied');
   }
 
   /* ── shared preview + export ── */
@@ -3597,12 +3618,20 @@ var VIRAL=(function(){
 
   /* ── AI prompts (output = exact textarea format, no parser needed) ── */
   function hbPrompt(){
-    var langNote=LANG==='en'?'ENGLISH only.':'Nepali (natural mixed Nepali/English), ONE style throughout.';
-    copyText('You write viral text-on-screen reels for "The Walking Paradox".\n\nTopic: [YOUR TOPIC HERE]\n\nWrite 8-12 BEATS, one per line, NOTHING else (no labels, no numbering):\n- Line 1 = the HOOK: under 8 words, curiosity gap or shocking claim. It is also the first frame.\n- Each beat under 8 words, punchy, builds tension line by line.\n- Mark key words: *gold insight*, _red shock/stat_, +green truth+. At least one mark per beat.\n- '+langNote+'\n- Last beat = the payoff punch that makes them rewatch.\n\nOutput ONLY the lines — I will paste them directly.','📋 Hook Bomb prompt copied');
+    var langNote=LANG==='en'?'ENGLISH only.':'Natural Nepali (Kathmandu-style mixing), ONE style throughout.';
+    copyText('ROLE: You write viral text-on-screen reels for "The Walking Paradox" (Nepal facts/truth page).\n\n'
+      +P_VOICE+'\n\n'+P_ACC+'\n\n'
+      +'TASK: Write 8-12 BEATS about: [YOUR TOPIC HERE]\n\n'
+      +'RHYTHM RULES:\n- Each beat = ONE thought, under 8 words. '+langNote+'\n- Beat 1 is the HOOK — it is also the first frame for sound-off scrollers.\n- Beat N must make beat N+1 necessary — tension builds line by line.\n- Last beat = the payoff punch that loops the mind back to beat 1 (rewatch trigger).\n- Mark key words: *gold insight*, _red shock/stat_, +green truth+. At least one mark per beat.\n\n'
+      +P_STEPS+'\n\nOUTPUT: ONLY the beat lines, one per line, no labels, no numbering — I paste them directly.','📋 Hook Bomb prompt copied');
   }
   function chPrompt(){
     var langNote=LANG==='en'?'ENGLISH only.':'Nepali questions, short answers.';
-    copyText('You write quiz challenge reels for "The Walking Paradox".\n\nTopic: [YOUR TOPIC HERE]\n\nOutput format — EXACTLY this, nothing else:\nLine 1: a catchy quiz title (under 7 words)\nThen 4-5 lines, each: Question | Answer\n\nRules: questions under 10 words, answers under 4 words, verified facts, surprising answers preferred, difficulty rising each question. '+langNote+'\n\nOutput ONLY the lines — I will paste them directly.','📋 Challenge prompt copied');
+    copyText('ROLE: You write quiz challenge reels for "The Walking Paradox".\n\n'
+      +P_VOICE+'\n\n'+P_ACC+'\n\n'
+      +'TASK: Write a 4-5 question challenge about: [YOUR TOPIC HERE]\n\n'
+      +'QUIZ RULES:\n- '+langNote+'\n- Questions under 10 words. Answers = single verifiable facts, 1-3 words.\n- Difficulty RISES: Q1 easy (everyone gets it — builds confidence), Q4-5 should stump 90% (they comment their score in frustration).\n- Fair but hard — never trick questions. Surprising true answers preferred.\n\n'
+      +P_STEPS+'\n\nOUTPUT EXACTLY:\nLine 1: catchy quiz title (under 7 words)\nThen one line per question: Question | Answer\nNothing else — I paste directly.','📋 Challenge prompt copied');
   }
 
   return {
