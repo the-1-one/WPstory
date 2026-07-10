@@ -223,6 +223,39 @@ canvas{max-width:100%;border-radius:8px}
   </div>
 
   <div class="card">
+    <div class="sec">7f · 🎞 Scene Reel <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(script + images + charts, synced)</span></div>
+    <div class="dim" style="margin-bottom:8px">The director format: mix <strong style="color:var(--gd)">TEXT:</strong> beats, <strong style="color:var(--gd)">IMG:</strong> photos (Ken Burns motion), <strong style="color:var(--gd)">BAR:</strong> animated charts, and <strong style="color:var(--gd)">NUM:</strong> counting stats — one line per scene, visuals land exactly on script.</div>
+    <textarea id="scScript" rows="7" placeholder="TEXT: नेपालको एउटा रहस्य *कसैले* भन्दैन&#10;IMG: kali gandaki gorge aerial | संसारकै गहिरो gorge&#10;BAR: Grand Canyon 1857, Kali Gandaki 5571 | गहिराइ (m)&#10;NUM: 5571 | m | काली गण्डकी गहिराइ&#10;TEXT: +यो record Nepal को हो+"></textarea>
+    <label>Images for IMG scenes (in order) — attach from Photos</label>
+    <input type="file" id="scFiles" accept="image/*" multiple onchange="VIRAL.scAttach(this.files)" style="padding:8px"/>
+    <label>Pexels API key (optional — auto-fetches images by query; free at pexels.com/api)</label>
+    <input id="scPxKey" placeholder="paste key once — saved on this device" onchange="VIRAL.scSaveKey(this.value)"/>
+    <div class="grid2" style="margin-top:10px">
+      <button class="btn2" onclick="VIRAL.scPrompt()">📋 Copy AI Prompt</button>
+      <button class="btn2" onclick="VIRAL.scPreview()">▶ Preview</button>
+    </div>
+    <button class="btn" style="margin-top:8px" onclick="VIRAL.scExport()">🎬 Export Scene Reel MP4</button>
+    <div class="dim" id="scStatus" style="margin-top:6px"></div>
+  </div>
+
+  <div class="card">
+    <div class="sec">8 · ▶️ YouTube Pack <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(thumbnail + search metadata)</span></div>
+    <div class="dim" style="margin-bottom:8px">Your reel MP4s are already Shorts-ready. This adds the YouTube layer: a 1280×720 thumbnail for long-form uploads, and SEO metadata — YouTube is a search engine, packaging decides clicks.</div>
+    <label>Thumbnail headline (2-5 words, *marks* work)</label>
+    <input id="ytMain" placeholder="Nepal को *गहिरो* रहस्य"/>
+    <div class="grid2" style="margin-top:8px">
+      <div><label>Sub-line (optional)</label><input id="ytSub" placeholder="99% लाई थाहा छैन"/></div>
+      <div><label>Badge (emoji / TOP 5)</label><input id="ytBadge" placeholder="🏔" maxlength="8"/></div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <button class="btn2" onclick="VIRAL.ytPreview()">👁 Preview Thumbnail</button>
+      <button class="btn" onclick="VIRAL.ytExport()">🖼 Export PNG</button>
+    </div>
+    <button class="btn2" style="width:100%;margin-top:8px" onclick="VIRAL.ytSeoPrompt()">📋 Copy YouTube SEO Prompt (title · description · tags · pinned comment)</button>
+    <div class="dim" id="ytStatus" style="margin-top:6px"></div>
+  </div>
+
+  <div class="card">
     <div class="sec">6 · SEO Caption</div>
     <div class="dim" style="margin-bottom:8px">TikTok is a search engine now — captions do SEO work. Keywords first.</div>
     <label>Main keyword / topic</label>
@@ -3554,6 +3587,271 @@ var VIRAL=(function(){
       +P_STEPS+'\n\nOUTPUT EXACTLY:\nLine 1: catchy title (under 7 words)\nThen one line per round: Option A | Option B\nNothing else — I paste directly.','📋 This-or-That prompt copied');
   }
 
+  /* ── YOUTUBE PACK: thumbnail + SEO metadata ── */
+  function ytThumbDraw(){
+    playing=false;cancelAnimationFrame(raf);
+    cv.width=1280;cv.height=720;
+    var boxW=Math.min(cv.parentElement.clientWidth-20,340);
+    cv.style.width=boxW+'px';cv.style.height=Math.round(boxW*720/1280)+'px';
+    var W=1280,H=720;
+    bgFrame('rgba(232,201,106,.17)',0);
+    var mainTxt=(document.getElementById('ytMain').value||'').trim()||'Nepal को *रहस्य*';
+    var sub=(document.getElementById('ytSub').value||'').trim();
+    var badge=(document.getElementById('ytBadge').value||'').trim();
+    var hasBadge=!!badge;
+    // headline — huge, left-weighted when badge present
+    var tx=hasBadge?W*.38:W*.5;
+    var mw=hasBadge?W*.56:W*.78;
+    richBlock(mainTxt,tx,H*(sub?.42:.47),Math.round(W*.088),mw,'#f7f2ea','900','"'+HFONT+'","Mukta",sans-serif');
+    // sub-line
+    if(sub){
+      g.font='800 '+Math.round(W*.036)+'px "DM Sans","Mukta",sans-serif';
+      g.fillStyle=hlC();g.textAlign=hasBadge?'left':'center';
+      g.shadowColor='rgba(0,0,0,.9)';g.shadowBlur=W*.012;
+      g.fillText(plain(sub),hasBadge?W*.12:W*.5,H*.72);
+      g.shadowBlur=0;
+    }
+    // badge circle right
+    if(hasBadge){
+      var bx=W*.8,by=H*.45,r=W*.115;
+      g.beginPath();g.arc(bx,by,r,0,Math.PI*2);
+      g.fillStyle='rgba(12,13,21,.85)';g.fill();
+      g.strokeStyle=hlC();g.lineWidth=W*.008;g.stroke();
+      var bsz2=badge.length<=2?Math.round(W*.1):Math.round(W*.05);
+      g.font='900 '+bsz2+'px "DM Sans","Mukta",sans-serif';
+      g.fillStyle='#f7f2ea';g.textAlign='center';
+      g.fillText(badge,bx,by+bsz2*.35);
+    }
+    // bottom brand strip
+    g.fillStyle='#c9334a';g.fillRect(0,H-10,W/2,10);
+    g.fillStyle='#4a7fc0';g.fillRect(W/2,H-10,W/2,10);
+  }
+  function ytPreview(){
+    if(busy)return;
+    ytThumbDraw();
+    var el=document.getElementById('ytStatus');
+    if(el)el.textContent='Thumbnail 1280×720 in preview above. Tap ▶ on any format to switch back.';
+  }
+  function ytExport(){
+    if(busy)return;
+    ytThumbDraw();
+    cv.toBlob(function(b){
+      if(!b){toast('Export failed');return;}
+      shareFiles([new File([b],'walkingparadox-thumbnail.png',{type:'image/png'})],'Thumbnail');
+      var el=document.getElementById('ytStatus');
+      if(el)el.textContent='✅ Thumbnail exported — use it on long-form uploads.';
+      render();
+    },'image/png');
+  }
+  function ytSeoPrompt(){
+    copyText('ROLE: You are the YouTube strategist for "The Walking Paradox" (Nepal facts / quiz / truth channel).\n\n'
+      +P_VOICE+'\n\n'+P_ACC+'\n\n'
+      +'TASK: Create YouTube metadata for this video: [DESCRIBE THE VIDEO OR PASTE THE SCRIPT HERE]\n\n'
+      +'YOUTUBE RULES:\n- TITLE: under 60 characters, main search keyword FIRST, then curiosity. Never promise what the video does not deliver — YouTube ranks satisfaction, clickbait gets buried.\n- DESCRIPTION: first 2 lines = hook + main keywords (only these show before "...more"), then 3-4 short value lines, then exactly 3 hashtags.\n- TAGS: 10-15 comma-separated, mixing broad (nepal facts, nepal quiz) and specific (the exact topic phrases people search).\n- PINNED COMMENT: one debate-starting question + a soft "subscribe for daily Nepal facts" line.\n- '+(LANG==='en'?'English metadata.':'Nepali title where Nepalis search in Nepali; keep high-volume English keywords where they actually search in English.')+'\n\n'
+      +P_STEPS+'\n\nOUTPUT EXACTLY:\nTITLE: ...\nDESCRIPTION: ...\nTAGS: ...\nPINNED: ...','📋 YouTube SEO prompt copied — paste in ChatGPT/Gemini');
+  }
+
+  /* ── SCENE REEL: script-synced text + images + charts ── */
+  var SC_POOL=[];      // uploaded images (Image objects, in order)
+  var SC_CACHE=null;   // prepared scenes with segs
+  function scSaveKey(k){sset('wpse_px',(k||'').trim());toast(k?'🔑 Pexels key saved':'Key cleared');}
+  function scAttach(fileList){
+    SC_POOL=[];SC_CACHE=null;
+    var files=Array.prototype.slice.call(fileList||[]);
+    if(!files.length)return;
+    var done=0;
+    files.forEach(function(fl,i){
+      var rd=new FileReader();
+      rd.onload=function(){
+        var im=new Image();
+        im.onload=function(){SC_POOL[i]=im;done++;if(done===files.length)toast('🖼 '+done+' image'+(done>1?'s':'')+' attached');};
+        im.src=rd.result;
+      };
+      rd.readAsDataURL(fl);
+    });
+  }
+  function scParse(){
+    var lines=(document.getElementById('scScript').value||'').split('\n').map(function(l){return l.trim();}).filter(Boolean);
+    var scenes=[];
+    lines.forEach(function(l){
+      var m=l.match(/^(TEXT|IMG|BAR|NUM)\s*:\s*(.+)$/i);
+      if(!m)return;
+      var ty=m[1].toUpperCase(), pay=m[2].trim();
+      if(ty==='TEXT')scenes.push({t:'text',txt:pay});
+      else if(ty==='IMG'){var p=pay.split('|');scenes.push({t:'img',q:(p[0]||'').trim(),cap:(p[1]||'').trim(),img:null});}
+      else if(ty==='NUM'){var p2=pay.split('|');scenes.push({t:'num',v:parseFloat((p2[0]||'0').replace(/[^0-9.]/g,''))||0,suf:(p2[1]||'').trim(),label:(p2[2]||'').trim()});}
+      else if(ty==='BAR'){
+        var p3=pay.split('|');
+        var items=(p3[0]||'').split(',').map(function(it){
+          it=it.trim();var mm=it.match(/^(.*?)([\d.]+)\s*$/);
+          return mm?{n:mm[1].trim(),v:parseFloat(mm[2])||0}:null;
+        }).filter(Boolean).slice(0,5);
+        scenes.push({t:'bar',items:items,title:(p3[1]||'').trim()});
+      }
+    });
+    return scenes.slice(0,16);
+  }
+  function scSegLen(s,i){
+    if(s.t==='text')return Math.round((i===0?1.6:Math.min(2.2,Math.max(0.9,0.55+plain(s.txt).length*0.035)))*VFPS);
+    if(s.t==='img')return Math.round(2.3*VFPS);
+    if(s.t==='bar')return Math.round((1.2+s.items.length*0.7)*VFPS);
+    if(s.t==='num')return Math.round(2.8*VFPS);
+    return VFPS;
+  }
+  function scBuild(){
+    var scenes=scParse();
+    var segs=scenes.map(scSegLen).concat([Math.round(1.9*VFPS)]);
+    return {scenes:scenes,segs:segs,tot:segs.reduce(function(a,b){return a+b;},0)};
+  }
+  async function scPrepare(statusId){
+    var st=document.getElementById(statusId);
+    var b=scBuild();
+    // assign uploaded images to IMG scenes in order; fetch missing via Pexels
+    var imgs=b.scenes.filter(function(s){return s.t==='img';});
+    var key=sget('wpse_px','');
+    var el=document.getElementById('scPxKey');
+    if(el&&!el.value&&key)el.value=key;
+    for(var i=0;i<imgs.length;i++){
+      if(SC_POOL[i]){imgs[i].img=SC_POOL[i];continue;}
+      if(!key)continue;
+      try{
+        if(st)st.textContent='🔎 Fetching image '+(i+1)+'/'+imgs.length+'…';
+        var resp=await fetch('https://api.pexels.com/v1/search?query='+encodeURIComponent(imgs[i].q)+'&per_page=1&orientation=portrait',{headers:{Authorization:key}});
+        var data=await resp.json();
+        var url=data&&data.photos&&data.photos[0]&&(data.photos[0].src.large2x||data.photos[0].src.large);
+        if(url){
+          imgs[i].img=await new Promise(function(res){
+            var im=new Image();im.crossOrigin='anonymous';
+            im.onload=function(){res(im);};im.onerror=function(){res(null);};
+            im.src=url;
+          });
+        }
+      }catch(e){/* graceful: falls back to text card */}
+    }
+    SC_CACHE=b;
+    return b;
+  }
+  function coverDraw(im,W,H,kb){
+    var r=Math.max(W/im.width,H/im.height)*(1+kb.z);
+    var dw=im.width*r,dh=im.height*r;
+    g.drawImage(im,(W-dw)/2+kb.x,(H-dh)/2+kb.y,dw,dh);
+  }
+  function scFrame(f){
+    var b=SC_CACHE||scBuild();
+    var W=cv.width,H=cv.height;
+    var acc=0,idx=0,local=0;
+    for(var i=0;i<b.segs.length;i++){if(f<acc+b.segs[i]){idx=i;local=f-acc;break;}acc+=b.segs[i];}
+    var seg=b.segs[idx];
+    if(idx>=b.scenes.length){
+      bgFrame('rgba(232,201,106,.16)',f);
+      richBlock(LANG==='en'?'Send this to a *friend* 📤':'यो *साथीलाई* पठाउनुस् 📤',W*.5,H*.44,Math.round(W*.068),W*.70,'#f7f2ea','900','"'+HFONT+'","Mukta",sans-serif');
+      progressBar(f,b.tot);handle();return;
+    }
+    var s=b.scenes[idx];
+    if(s.t==='text'){
+      bgFrame(idx===0?'rgba(232,201,106,.14)':'rgba(74,127,192,.1)',f);
+      var pop=Math.min(local/4,1);var scale=1.08-0.08*pop;
+      g.save();g.translate(W/2,H*.48);g.scale(scale,scale);g.translate(-W/2,-H*.48);
+      richBlock(s.txt,W*.5,H*.48,idx===0?Math.round(W*.095):Math.round(W*.082),W*.70,'#f7f2ea','900','"'+HFONT+'","Mukta",sans-serif',local);
+      g.restore();
+    }
+    else if(s.t==='img'){
+      if(s.img){
+        // Ken Burns: slow zoom-out + deterministic drift
+        var p=local/seg;
+        var dirx=(prand(idx*11)*2-1), diry=(prand(idx*17)*2-1);
+        coverDraw(s.img,W,H,{z:.1*(1-p*.6),x:dirx*W*.018*p,y:diry*W*.018*p});
+        // cinematic dark edges + bottom gradient for caption
+        var gr2=g.createLinearGradient(0,H*.55,0,H);
+        gr2.addColorStop(0,'rgba(5,5,9,0)');gr2.addColorStop(1,'rgba(5,5,9,.88)');
+        g.fillStyle=gr2;g.fillRect(0,H*.55,W,H*.45);
+        var gr3=g.createLinearGradient(0,0,0,H*.16);
+        gr3.addColorStop(0,'rgba(5,5,9,.7)');gr3.addColorStop(1,'rgba(5,5,9,0)');
+        g.fillStyle=gr3;g.fillRect(0,0,W,H*.16);
+        var pp2=Math.round(W*.014);
+        g.fillStyle='#c9334a';g.fillRect(0,0,pp2,H*.5);
+        g.fillStyle='#4a7fc0';g.fillRect(0,H*.5,pp2,H*.5);
+      } else {
+        bgFrame('rgba(74,127,192,.12)',f);
+      }
+      if(s.cap)richBlock(s.cap,W*.5,H*(s.img?.82:.48),Math.round(W*.055),W*.70,'#f7f2ea','900','"'+HFONT+'","Mukta",sans-serif',local);
+    }
+    else if(s.t==='num'){
+      bgFrame('rgba(74,127,192,.11)',f);
+      if(s.label)richBlock(s.label,W*.5,H*.32,Math.round(W*.055),W*.70,'#f7f2ea','800','"'+HFONT+'","Mukta",sans-serif',local);
+      var CNT=Math.round(1.4*VFPS);
+      var cp=Math.min(Math.max(local-Math.round(0.5*VFPS),0)/CNT,1);
+      if(cp>0){
+        var eased=1-Math.pow(1-cp,3);
+        var val=s.v*eased;
+        var shown=s.v>=100?Math.round(val).toLocaleString('en-US'):(''+(Math.round(val*10)/10));
+        var slam=cp>=1?Math.max(0,1-((local-Math.round(0.5*VFPS)-CNT)/4)):0;
+        var shx=(prand(f*3)*2-1)*W*.007*slam, shy=(prand(f*7)*2-1)*W*.007*slam;
+        g.save();
+        g.translate(W/2+shx,H*.54+shy);g.scale(1+slam*.09,1+slam*.09);g.translate(-W/2,-H*.54);
+        g.font='900 '+Math.round(W*.15)+'px "DM Sans","Mukta",sans-serif';
+        g.fillStyle=hlC();g.textAlign='center';
+        g.shadowColor='rgba(0,0,0,.9)';g.shadowBlur=W*.02;
+        g.fillText(shown+(s.suf?' '+s.suf:''),W/2,H*.56);
+        g.shadowBlur=0;g.restore();
+        if(slam>0){
+          g.strokeStyle='rgba(232,201,106,'+(slam*.45)+')';g.lineWidth=Math.max(2,W*.007*slam);
+          g.beginPath();g.arc(W/2,H*.54,W*(.17+(1-slam)*.28),0,Math.PI*2);g.stroke();
+        }
+      }
+    }
+    else if(s.t==='bar'){
+      bgFrame('rgba(74,127,192,.11)',f);
+      if(s.title)richBlock(s.title,W*.5,H*.22,Math.round(W*.05),W*.70,'#f7f2ea','800','"'+HFONT+'","Mukta",sans-serif',local);
+      var maxV=0;s.items.forEach(function(it){maxV=Math.max(maxV,it.v);});
+      var y0=H*.34, rowH=H*.115, bw=W*.58, bx=W*.12;
+      s.items.forEach(function(it,ii){
+        var startF=Math.round(0.5*VFPS)+ii*Math.round(0.55*VFPS);
+        var bp=Math.min(Math.max(local-startF,0)/Math.round(0.8*VFPS),1);
+        if(bp<=0)return;
+        var ep=1-Math.pow(1-bp,3);
+        var isMax=it.v===maxV;
+        var yy=y0+ii*rowH;
+        // label
+        g.font='700 '+Math.round(W*.032)+'px "DM Sans","Mukta",sans-serif';
+        g.fillStyle='rgba(236,229,216,.9)';g.textAlign='left';
+        g.shadowColor='rgba(0,0,0,.8)';g.shadowBlur=W*.01;
+        g.fillText(it.n,bx,yy);
+        g.shadowBlur=0;
+        // bar
+        var w2=(it.v/maxV)*bw*ep;
+        var bh3=H*.042;
+        g.fillStyle=isMax?hlC():'rgba(74,127,192,.55)';
+        g.beginPath();g.roundRect?g.roundRect(bx,yy+H*.012,Math.max(w2,bh3),bh3,bh3/2):g.rect(bx,yy+H*.012,Math.max(w2,bh3),bh3);g.fill();
+        // value countup at bar end
+        var shown2=Math.round(it.v*ep).toLocaleString('en-US');
+        g.font='900 '+Math.round(W*.036)+'px "DM Sans","Mukta",sans-serif';
+        g.fillStyle=isMax?hlC():'#ece5d8';
+        g.fillText(shown2,bx+Math.max(w2,bh3)+W*.02,yy+H*.012+bh3*.82);
+      });
+    }
+    progressBar(f,(SC_CACHE||b).tot);handle();
+  }
+  function scTotal(){return (SC_CACHE||scBuild()).tot;}
+  async function scPreview(){
+    if(busy)return;
+    if(playing){playing=false;cancelAnimationFrame(raf);render();document.getElementById('scStatus').textContent='Stopped.';return;}
+    await scPrepare('scStatus');
+    makePreview(scFrame,scTotal,'scStatus')();
+  }
+  async function scExport(){
+    if(busy)return;
+    await scPrepare('scStatus');
+    encode(scFrame,scTotal,'scStatus','walkingparadox-scene-reel.mp4');
+  }
+  function scPrompt(){
+    copyText('ROLE: You are the reel DIRECTOR for "The Walking Paradox" (Nepal facts/truth page) — you write the script AND the visual plan together.\n\n'
+      +P_VOICE+'\n\n'+P_ACC+'\n\n'
+      +'TASK: Write a scene-by-scene reel about: [YOUR TOPIC HERE]\n\n'
+      +'SCENE GRAMMAR (one line per scene, 8-14 scenes):\nTEXT: <beat under 8 words, *marks* work> — for narrative moments\nIMG: <specific english image search query> | <short overlay caption> — when the viewer should SEE it\nBAR: <name value, name value | chart title> — when comparing 2-4 verified numbers\nNUM: <number> | <suffix> | <label> — when ONE number deserves the spotlight\n\nDIRECTING RULES:\n- Scene 1 = TEXT hook.\n- Never more than 2 TEXT scenes in a row — a visual must land every 2-3 beats, exactly where the script mentions it.\n- IMG queries: concrete and specific ("kali gandaki gorge aerial view", not "nepal nature").\n- BAR/NUM only with verified numbers. '+(LANG==='en'?'English.':'Nepali text, English image queries.')+'\n- Last scene = the payoff.\n\n'
+      +P_STEPS+'\n\nOUTPUT: ONLY the scene lines, nothing else — I paste them directly.','📋 Scene Reel prompt copied');
+  }
+
   /* ── shared preview + export ── */
   function makePreview(frameFn,totalFn,statusId){
     return function(){
@@ -3650,6 +3948,14 @@ var VIRAL=(function(){
     ttPreview:makePreview(ttFrame,ttTotal,'ttStatus'),
     ttExport:function(){encode(ttFrame,ttTotal,'ttStatus','walkingparadox-thisorthat.mp4');},
     ttPrompt:ttPrompt,
+    scAttach:scAttach,
+    scSaveKey:scSaveKey,
+    scPrompt:scPrompt,
+    scPreview:scPreview,
+    scExport:scExport,
+    ytPreview:ytPreview,
+    ytExport:ytExport,
+    ytSeoPrompt:ytSeoPrompt,
     save:save,
   };
 })();
