@@ -54,6 +54,9 @@ canvas{max-width:100%;border-radius:8px}
 .lang-fixed{position:fixed;top:70px;right:8px;z-index:200;display:flex;flex-direction:column;gap:3px;background:rgba(12,13,21,.92);border:1px solid rgba(232,201,106,.25);border-radius:10px;padding:3px}
 .lang-fixed button{padding:7px 9px;border-radius:7px;background:transparent;color:var(--t2);font-size:11px;font-weight:700;min-height:34px}
 .lang-fixed button.on{background:var(--gd);color:var(--inv)}
+.tabbar{position:sticky;top:0;z-index:120;display:flex;gap:6px;overflow-x:auto;padding:8px 6px;background:rgba(12,13,21,.97);border-bottom:1px solid var(--b1);-webkit-overflow-scrolling:touch}
+.tabbar button{flex:0 0 auto;padding:9px 14px;border-radius:20px;background:var(--lift);color:var(--t2);border:1px solid var(--b2);font-weight:700;font-size:12px;min-height:38px}
+.tabbar button.on{background:var(--gd);color:var(--inv);border-color:var(--gd)}
 </style>
 </head>
 <body>
@@ -70,8 +73,20 @@ canvas{max-width:100%;border-radius:8px}
 
 <div class="wrap">
 
+  <div class="tabbar">
+    <button id="tb-carousel" class="on" onclick="switchTab('carousel')">📖 Carousel</button>
+    <button id="tb-viral" onclick="switchTab('viral')">⚡ Viral Reels</button>
+    <button id="tb-scene" onclick="switchTab('scene')">🎞 Scene</button>
+    <button id="tb-youtube" onclick="switchTab('youtube')">▶️ YouTube</button>
+    <button id="tb-decode" onclick="switchTab('decode')">🧬 Decode</button>
+  </div>
+
+  <div style="padding:10px 0 4px"><div class="canvas-box"><canvas id="cv"></canvas></div></div>
+
+
+<div class="tabsec" id="tab-carousel">
   <div class="card">
-    <div class="sec">1 · Framework</div>
+    <div class="sec">Framework</div>
     <div class="dim" style="margin-bottom:8px">Each framework is engineered for swipe-through: hook cover → cliffhanger slides → payoff ending.</div>
     <div class="grid3">
       <button class="chip on" id="fwListicle" onclick="setFw('listicle')">📋 Listicle</button>
@@ -83,7 +98,7 @@ canvas{max-width:100%;border-radius:8px}
   </div>
 
   <div class="card">
-    <div class="sec">1b · Style</div>
+    <div class="sec">Style</div>
     <label>Highlight color — wrap key words in *stars* to color them</label>
     <div class="grid2" style="grid-template-columns:repeat(4,1fr)">
       <button class="chip on" id="accGold" onclick="setAcc('gold')">Gold</button>
@@ -107,7 +122,7 @@ canvas{max-width:100%;border-radius:8px}
   </div>
 
   <div class="card">
-    <div class="sec">2 · Content</div>
+    <div class="sec">Content</div>
     <label>Series tag (top of cover — the follow trigger)</label>
     <input id="seriesTag" placeholder="e.g. NEPAL FACTS · PART 4" oninput="saveDraft();render()"/>
     <div class="grid2" style="margin-top:8px">
@@ -119,18 +134,18 @@ canvas{max-width:100%;border-radius:8px}
   </div>
 
   <div class="card">
-    <div class="sec">3 · Slides (<span id="slideCount">0</span>)</div>
+    <div class="sec">Slides (<span id="slideCount">0</span>)</div>
     <div id="slideList"></div>
     <button class="btn3" style="width:100%" onclick="addSlide()">＋ Add slide</button>
   </div>
 
   <div class="card">
-    <div class="sec">4 · Preview</div>
+    <div class="sec">Preview</div>
     <div class="grid2" style="margin-bottom:8px">
       <button class="chip on" id="fmtTt" onclick="setFmt('tt')">TikTok 9:16</button>
       <button class="chip" id="fmtIg" onclick="setFmt('ig')">Instagram 4:5</button>
     </div>
-    <div class="canvas-box"><canvas id="cv"></canvas></div>
+    <div class="dim" style="text-align:center;padding:6px 0">Preview renders in the canvas at the top ↑</div>
     <div class="slide-nav">
       <button class="btn3" onclick="nav(-1)">◀ Prev</button>
       <div class="lbl" id="navLbl">—</div>
@@ -139,7 +154,7 @@ canvas{max-width:100%;border-radius:8px}
   </div>
 
   <div class="card">
-    <div class="sec">5 · Export</div>
+    <div class="sec">Export</div>
     <button class="btn-green" onclick="exportAll()">📤 Export ALL slides → Photos</button>
     <div style="height:8px"></div>
     <button class="btn2" style="width:100%" onclick="exportOne()">🖼 Save current slide only</button>
@@ -147,7 +162,7 @@ canvas{max-width:100%;border-radius:8px}
   </div>
 
   <div class="card">
-    <div class="sec">5b · 🎬 Reel Mode <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(same slides → Instagram Reel)</span></div>
+    <div class="sec">🎬 Reel Mode <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(same slides → Instagram Reel)</span></div>
     <div class="dim" style="margin-bottom:8px">Turns this carousel into a slideshow Reel: hook holds, slides auto-advance at reading speed, ends with a "send to a friend" card (DM sends are the #1 Reels signal). Export is silent on purpose — add a <strong style="color:var(--gd)">trending audio inside Instagram</strong> for the distribution boost.</div>
     <label>Pace</label>
     <div class="grid3">
@@ -161,9 +176,23 @@ canvas{max-width:100%;border-radius:8px}
     </div>
     <div class="dim" id="reelStatus" style="margin-top:8px"></div>
   </div>
-
   <div class="card">
-    <div class="sec">7a · ⚡ Hook Bomb <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(viral text-on-screen reel)</span></div>
+    <div class="sec">SEO Caption</div>
+    <div class="dim" style="margin-bottom:8px">TikTok is a search engine now — captions do SEO work. Keywords first.</div>
+    <label>Main keyword / topic</label>
+    <input id="capTopic" placeholder="e.g. Nepal geography facts" oninput="buildCaption()"/>
+    <label>2-3 extra keywords (comma separated)</label>
+    <input id="capKeys" placeholder="e.g. himalaya, nepal quiz, travel nepal" oninput="buildCaption()"/>
+    <label>Generated caption</label>
+    <textarea id="capOut" rows="5" readonly></textarea>
+    <button class="btn2" style="width:100%;margin-top:8px" onclick="copyCaption()">📋 Copy caption</button>
+  </div>
+
+
+</div>
+<div class="tabsec" id="tab-viral" style="display:none">
+  <div class="card">
+    <div class="sec">⚡ Hook Bomb <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(viral text-on-screen reel)</span></div>
     <div class="dim" style="margin-bottom:8px">The #1 faceless format. One line per beat — line 1 is the HOOK (it's also the first frame, for sound-off scrollers). Use *gold* _red_ +green+ marks. Keep beats under 8 words. Under 15s total.</div>
     <textarea id="hbScript" rows="6" placeholder="_९९% मान्छे_ यो गल्ती गर्छन्&#10;पैसा कमाउने होइन&#10;*बचाउने* game हो&#10;..."></textarea>
     <div class="grid2" style="margin-top:8px">
@@ -175,7 +204,7 @@ canvas{max-width:100%;border-radius:8px}
   </div>
 
   <div class="card">
-    <div class="sec">7b · ⏱ Challenge Reel <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(guess before the timer)</span></div>
+    <div class="sec">⏱ Challenge Reel <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(guess before the timer)</span></div>
     <div class="dim" style="margin-bottom:8px">Retention machine: question → 3-2-1 countdown → answer snap. Viewers must stay to check answers, then comment their score. First line = title, then one <strong style="color:var(--gd)">Question | Answer</strong> per line (3-5 questions).</div>
     <textarea id="chScript" rows="6" placeholder="Nepal Quiz — कति आउँछ?&#10;नेपालको सबैभन्दा लामो नदी? | कर्णाली&#10;सगरमाथा कति मिटर? | ८८४८&#10;..."></textarea>
     <div class="grid2" style="margin-top:8px">
@@ -187,7 +216,7 @@ canvas{max-width:100%;border-radius:8px}
   </div>
 
   <div class="card">
-    <div class="sec">7c · 💬 Chat Story <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(text-message reel — top viral faceless format)</span></div>
+    <div class="sec">💬 Chat Story <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(text-message reel — top viral faceless format)</span></div>
     <div class="dim" style="margin-bottom:8px">A conversation that types out bubble by bubble. Line 1 = contact name. Then <strong style="color:var(--gd)">A:</strong> (them, grey) and <strong style="color:var(--gd)">B:</strong> (you, gold) lines. First message must shock — it's the first frame.</div>
     <textarea id="csScript" rows="6" placeholder="Unknown Number&#10;A: तिमीलाई थाहा छ नेपालको बारेमा?&#10;B: के?&#10;A: यहाँ संसारकै गहिरो gorge छ&#10;B: होइन होला!&#10;A: 5571m — Grand Canyon भन्दा गहिरो"></textarea>
     <div class="grid2" style="margin-top:8px">
@@ -199,7 +228,7 @@ canvas{max-width:100%;border-radius:8px}
   </div>
 
   <div class="card">
-    <div class="sec">7d · 📊 Stat Slam <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(numbers that count up and hit)</span></div>
+    <div class="sec">📊 Stat Slam <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(numbers that count up and hit)</span></div>
     <div class="dim" style="margin-bottom:8px">Data drama for your facts niche: each stat counts up with an odometer slam. Line 1 = hook title. Then <strong style="color:var(--gd)">Label | Number | suffix | context line</strong>.</div>
     <textarea id="ssScript" rows="6" placeholder="Nepal को यी numbers ले चकित पार्छ&#10;काली गण्डकी गहिराइ | 5571 | m | Grand Canyon भन्दा गहिरो&#10;विदेशमा नेपाली | 2200000 | + | हरेक घरबाट कोही न कोही&#10;Remittance | 33 | % of GDP | अर्थतन्त्रको मुटु"></textarea>
     <div class="grid2" style="margin-top:8px">
@@ -211,7 +240,7 @@ canvas{max-width:100%;border-radius:8px}
   </div>
 
   <div class="card">
-    <div class="sec">7e · ⚔️ This or That <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(vote-bait — comments engineered in)</span></div>
+    <div class="sec">⚔️ This or That <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(vote-bait — comments engineered in)</span></div>
     <div class="dim" style="margin-bottom:8px">Rapid A-vs-B rounds. Viewers HAVE to pick a side in the comments. Line 1 = title. Then <strong style="color:var(--gd)">Option A | Option B</strong> per line.</div>
     <textarea id="ttScript" rows="5" placeholder="नेपाली हो भने रोज्नुस्&#10;🏔 पोखरा | 🏙 काठमाडौं&#10;🥟 ममः | 🍲 थकाली&#10;🇳🇵 नेपालमै बस्ने | 🌏 विदेश जाने"></textarea>
     <div class="grid2" style="margin-top:8px">
@@ -222,8 +251,10 @@ canvas{max-width:100%;border-radius:8px}
     <div class="dim" id="ttStatus" style="margin-top:6px"></div>
   </div>
 
+</div>
+<div class="tabsec" id="tab-scene" style="display:none">
   <div class="card">
-    <div class="sec">7f · 🎞 Scene Reel <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(script + images + charts, synced)</span></div>
+    <div class="sec">🎞 Scene Reel <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(script + images + charts, synced)</span></div>
     <div class="dim" style="margin-bottom:8px">The director format: mix <strong style="color:var(--gd)">TEXT:</strong> beats, <strong style="color:var(--gd)">IMG:</strong> photos (Ken Burns motion), <strong style="color:var(--gd)">BAR:</strong> animated charts, and <strong style="color:var(--gd)">NUM:</strong> counting stats — one line per scene, visuals land exactly on script.</div>
     <textarea id="scScript" rows="7" placeholder="TEXT: नेपालको एउटा रहस्य *कसैले* भन्दैन&#10;IMG: kali gandaki gorge aerial | संसारकै गहिरो gorge&#10;BAR: Grand Canyon 1857, Kali Gandaki 5571 | गहिराइ (m)&#10;NUM: 5571 | m | काली गण्डकी गहिराइ&#10;TEXT: +यो record Nepal को हो+"></textarea>
     <label>Images for IMG scenes (in order) — attach from Photos</label>
@@ -238,8 +269,10 @@ canvas{max-width:100%;border-radius:8px}
     <div class="dim" id="scStatus" style="margin-top:6px"></div>
   </div>
 
+</div>
+<div class="tabsec" id="tab-youtube" style="display:none">
   <div class="card">
-    <div class="sec">8 · ▶️ YouTube Pack <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(thumbnail + search metadata)</span></div>
+    <div class="sec">▶️ YouTube Pack <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(thumbnail + search metadata)</span></div>
     <div class="dim" style="margin-bottom:8px">Your reel MP4s are already Shorts-ready. This adds the YouTube layer: a 1280×720 thumbnail for long-form uploads, and SEO metadata — YouTube is a search engine, packaging decides clicks.</div>
     <label>Thumbnail headline (2-5 words, *marks* work)</label>
     <input id="ytMain" placeholder="Nepal को *गहिरो* रहस्य"/>
@@ -251,21 +284,26 @@ canvas{max-width:100%;border-radius:8px}
       <button class="btn2" onclick="VIRAL.ytPreview()">👁 Preview Thumbnail</button>
       <button class="btn" onclick="VIRAL.ytExport()">🖼 Export PNG</button>
     </div>
+    <label>What is the video about? (topic — or paste the script)</label>
+    <textarea id="ytDesc" rows="3" placeholder="e.g. 50 Nepal facts compilation — stitched from my Stat Slam reels about geography records"></textarea>
     <button class="btn2" style="width:100%;margin-top:8px" onclick="VIRAL.ytSeoPrompt()">📋 Copy YouTube SEO Prompt (title · description · tags · pinned comment)</button>
+    <div class="dim" style="margin-top:6px">The AI's answer goes straight into <strong style="color:var(--gd)">YouTube's upload page</strong> — nothing pastes back here. That's why this card has no Paste button.</div>
     <div class="dim" id="ytStatus" style="margin-top:6px"></div>
   </div>
 
+</div>
+<div class="tabsec" id="tab-decode" style="display:none">
   <div class="card">
-    <div class="sec">6 · SEO Caption</div>
-    <div class="dim" style="margin-bottom:8px">TikTok is a search engine now — captions do SEO work. Keywords first.</div>
-    <label>Main keyword / topic</label>
-    <input id="capTopic" placeholder="e.g. Nepal geography facts" oninput="buildCaption()"/>
-    <label>2-3 extra keywords (comma separated)</label>
-    <input id="capKeys" placeholder="e.g. himalaya, nepal quiz, travel nepal" oninput="buildCaption()"/>
-    <label>Generated caption</label>
-    <textarea id="capOut" rows="5" readonly></textarea>
-    <button class="btn2" style="width:100%;margin-top:8px" onclick="copyCaption()">📋 Copy caption</button>
+    <div class="sec">🧬 Viral Decoder <span style="color:var(--t3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(reverse-engineer any viral clip)</span></div>
+    <div class="dim" style="margin-bottom:8px;line-height:1.6">
+      <strong style="color:var(--gd)">Workflow:</strong> screen-record the viral reel → open <strong style="color:var(--gd)">Gemini</strong> → attach the recording → paste this prompt. It X-rays the hook, beat structure, pacing and retention devices — then rebuilds the same skeleton with <em>original</em> Walking Paradox content in a paste-ready format for the tools above. (ChatGPT: paste the clip's transcript or describe it instead.)
+    </div>
+    <button class="btn" onclick="copyDecodePrompt()">📋 Copy DECODE prompt</button>
+    <div class="dim" style="margin-top:8px">Structure is modeled, scripts are never copied — platforms bury reused content, and originals build <em>your</em> brand.</div>
   </div>
+</div>
+
+
 
 </div>
 
@@ -2711,7 +2749,7 @@ window.addSlide=function(){
 
 /* ═══════════ AI PROMPT + PARSE ═══════════ */
 /* ── PROMPT SYSTEM: shared contracts (voice, accuracy, staged process) ── */
-var P_VOICE='VOICE CONTRACT (strict): Write like a sharp Nepali friend revealing a secret — never a textbook, never a news anchor. Short punchy lines. Natural Kathmandu-style Nepali-English mixing. BANNED: "in today\'s world", "delve", "unlock", "game-changer", "let\'s explore", "journey", "amazing", moral-lesson endings, exclamation spam, perfectly formal textbook Nepali. If a line could appear in any generic AI post, rewrite it until it sounds typed by a real person.';
+var P_VOICE='VOICE CONTRACT (strict): Write like a sharp Nepali friend revealing a secret — never a textbook, never a news anchor. Short punchy lines. Natural Kathmandu-style Nepali-English mixing. BANNED: "in today\'s world", "delve", "unlock", "game-changer", "let\'s explore", "journey", "amazing", moral-lesson endings, exclamation spam, perfectly formal textbook Nepali. If a line could appear in any generic AI post, rewrite it until it sounds typed by a real person.\nHOOK LANGUAGE RULE: the HOOK / first line / first frame must be in simple ENGLISH (international test audiences see it first \u2014 they must not instantly swipe). Everything after follows the language instruction.';
 var P_ACC='ACCURACY CONTRACT (strict): Use ONLY facts you are highly confident are documented. If you have web access, verify every number and name before output. NEVER invent or estimate a statistic. If a fact is shaky, replace it with a verified one — do not guess. One wrong fact destroys this page\'s credibility.';
 var P_STEPS='PROCESS — do these steps silently, show ONLY the final output:\nStep 1: Write 3 different hook angles. Judge them — which creates the strongest curiosity gap in under 10 words?\nStep 2: Draft the full piece using the winning hook.\nStep 3: Self-check the draft: any line that sounds AI-written? any fact you cannot verify? anything too long? Fix all of it.\nStep 4: Output ONLY the final result in the exact format below. No preamble, no explanations, no markdown.';
 window.copyRefinePrompt=function(){
@@ -2979,6 +3017,7 @@ var REEL=(function(){
   function preview(){
     if(busy)return;
     if(playing){playing=false;cancelAnimationFrame(raf);render();status('Preview stopped.');return;}
+    try{cv.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}
     playing=true;
     var f=0,last=0,tot=totalFrames();
     status('▶ Playing… ('+Math.round(tot/RFPS)+'s) — tap Preview again to stop');
@@ -3629,6 +3668,7 @@ var VIRAL=(function(){
   function ytPreview(){
     if(busy)return;
     ytThumbDraw();
+    try{cv.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}
     var el=document.getElementById('ytStatus');
     if(el)el.textContent='Thumbnail 1280×720 in preview above. Tap ▶ on any format to switch back.';
   }
@@ -3644,9 +3684,11 @@ var VIRAL=(function(){
     },'image/png');
   }
   function ytSeoPrompt(){
+    var desc=(document.getElementById('ytDesc').value||'').trim();
+    if(!desc){toast('✍️ First fill in "What is the video about?" above — the AI needs it');return;}
     copyText('ROLE: You are the YouTube strategist for "The Walking Paradox" (Nepal facts / quiz / truth channel).\n\n'
       +P_VOICE+'\n\n'+P_ACC+'\n\n'
-      +'TASK: Create YouTube metadata for this video: [DESCRIBE THE VIDEO OR PASTE THE SCRIPT HERE]\n\n'
+      +'TASK: Create YouTube metadata for this video: '+desc+'\n\n'
       +'YOUTUBE RULES:\n- TITLE: under 60 characters, main search keyword FIRST, then curiosity. Never promise what the video does not deliver — YouTube ranks satisfaction, clickbait gets buried.\n- DESCRIPTION: first 2 lines = hook + main keywords (only these show before "...more"), then 3-4 short value lines, then exactly 3 hashtags.\n- TAGS: 10-15 comma-separated, mixing broad (nepal facts, nepal quiz) and specific (the exact topic phrases people search).\n- PINNED COMMENT: one debate-starting question + a soft "subscribe for daily Nepal facts" line.\n- '+(LANG==='en'?'English metadata.':'Nepali title where Nepalis search in Nepali; keep high-volume English keywords where they actually search in English.')+'\n\n'
       +P_STEPS+'\n\nOUTPUT EXACTLY:\nTITLE: ...\nDESCRIPTION: ...\nTAGS: ...\nPINNED: ...','📋 YouTube SEO prompt copied — paste in ChatGPT/Gemini');
   }
@@ -3860,6 +3902,7 @@ var VIRAL=(function(){
       var tot=totalFn();
       if(tot<VFPS){toast('Add content first');return;}
       FMT='tt';fitCv();
+      try{cv.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}
       playing=true;var f=0,last=0;
       document.getElementById(statusId).textContent='▶ '+Math.round(tot/VFPS)+'s — tap Preview again to stop';
       function loop(ts){
@@ -3961,6 +4004,44 @@ var VIRAL=(function(){
 })();
 window.VIRAL=VIRAL;
 
+window.copyDecodePrompt=function(){
+  var langNote=LANG==='en'?'Everything in ENGLISH.':'HOOK in simple English (first-frame rule); body in natural Nepali (Kathmandu mixing).';
+  copyText('ROLE: You are a viral short-video ANALYST and adapter for "The Walking Paradox" (Nepal facts / quiz / truth brand).\n\n'
+    +'INPUT: the attached video — or the transcript/description pasted here: [PASTE IF NO VIDEO]\nMy adaptation topic: [MY TOPIC — or write "same niche"]\n\n'
+    +'STEP 1 — DECODE (output this compact analysis first):\n'
+    +'\u2022 HOOK (first 3s): the exact scroll-stopping mechanism (shock claim / question / POV / visual pattern-interrupt), word count, text-led or visual-led.\n'
+    +'\u2022 STRUCTURE: beat-by-beat map with rough timestamps; name the archetype (listicle / story arc / chat story / challenge / stat drama / this-or-that / transformation / rant).\n'
+    +'\u2022 RETENTION: curiosity gaps, open loops, progress cues, payoff position, loop-back ending.\n'
+    +'\u2022 PACING: beat changes per 10s; where energy peaks.\n'
+    +'\u2022 ENGAGEMENT: what specifically makes people comment / share / rewatch.\n'
+    +'\u2022 WHY IT WORKED: the 2-3 core mechanisms, one line each.\n\n'
+    +'STEP 2 — ADAPT: rebuild the SAME skeleton (same beat count, same hook mechanism, same pacing rhythm, same retention devices) with COMPLETELY ORIGINAL content for my brand and topic.\n'
+    +'HARD RULES:\n- Model the structure; NEVER copy their script, jokes, or facts — every line original.\n- '+langNote+'\n- Color-mark phrases: *gold insight*, _red shock_, +green truth+, [box] for THE number (once), ~strike~ for lies.\n\n'
+    +P_VOICE+'\n\n'+P_ACC+'\n\n'
+    +'STEP 3 — OUTPUT: after the analysis, print "FORMAT: <name>" choosing the closest match, then ONLY the machine-format lines:\n'
+    +'\u2022 HOOKBOMB \u2192 8-12 lines, one beat per line (<8 words each), nothing else\n'
+    +'\u2022 CHALLENGE \u2192 line 1 title; then: Question | Answer\n'
+    +'\u2022 CHAT \u2192 line 1 contact name; then alternating: A: msg / B: msg\n'
+    +'\u2022 STAT \u2192 line 1 title; then: Label | Number | suffix | comparison\n'
+    +'\u2022 THISORTHAT \u2192 line 1 title; then: Option A | Option B\n'
+    +'\u2022 SCENE \u2192 lines of TEXT: beat / IMG: english query | caption / BAR: name value, name value | title / NUM: number | suffix | label\n'
+    +'\u2022 CAROUSEL \u2192 COVER: hook | sub / SLIDE: kicker | title | body / PAYOFF: insight | CTA / CAPTION: seo caption\n'
+    ,'🧬 Decode prompt copied — attach the video in Gemini (or paste transcript in ChatGPT)');
+};
+
+var WPSE_TABS=['carousel','viral','scene','youtube','decode'];
+window.switchTab=function(t){
+  WPSE_TABS.forEach(function(k){
+    var sec=document.getElementById('tab-'+k);
+    if(sec)sec.style.display=(k===t)?'':'none';
+    var b=document.getElementById('tb-'+k);
+    if(b)b.classList.toggle('on',k===t);
+  });
+  sset('wpse_tab',t);
+  window.scrollTo(0,0);
+  try{render();}catch(e){}
+};
+
 /* boot */
 document.getElementById('lNp').classList.toggle('on',LANG==='np');
 document.getElementById('lEn').classList.toggle('on',LANG==='en');
@@ -3969,6 +4050,7 @@ buildList();
 render();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){render();});
 window.addEventListener('resize',render);
+switchTab(sget('wpse_tab','carousel'));
 
 }catch(err){
   document.body.innerHTML='<div style="padding:30px;color:#f5f0e8;font-family:sans-serif"><h3 style="color:#c9334a">Startup error</h3><pre style="white-space:pre-wrap;font-size:12px">'+(err&&err.stack||err)+'</pre></div>';
